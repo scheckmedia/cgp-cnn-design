@@ -4,10 +4,10 @@ from types import NoneType
 import numpy as np
 from .cgp import FunctionGen, Individual
 
-def plot_graph(individual, filename=None):
+def plot_graph(individual, filename=None, rankdir='TB'):
     try:
         import pydot
-        graph = pydot.Dot(graph_type='graph')
+        graph = pydot.Dot(graph_type='graph', rankdir=rankdir)
         active_nodes = np.where(individual.active)[0]
 
         nodes = {}
