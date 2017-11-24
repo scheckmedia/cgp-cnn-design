@@ -416,7 +416,7 @@ class CGP:
                         print('%s' % ('#' * 100))
 
                     self.parent = child
-                    evaluator.improved(idx, child.score)
+                    evaluator.improved(idx + 1, child.score)
 
                     if save_best is not None:
                         p = os.path.abspath(os.path.dirname(save_best))
