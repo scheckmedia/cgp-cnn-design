@@ -1,14 +1,15 @@
 from keras.datasets import cifar10
-from keras.utils import to_categorical
+from keras.utils import to_categorical, plot_model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
 from keras.layers import Dense, Flatten
 import numpy as np
 import operator
 from trainer.trainer import ClassifyTrainer
+import os
 
 class Cifar10Trainer(ClassifyTrainer):
-    def __init__(self, batch_size=32, epochs=100, verbose=1):
+    def __init__(self, batch_size=32, epochs=100, verbose=1, model_path='tmp/'):
         """
         A trainer class for the Cifar 10 dataset
 
@@ -44,6 +45,7 @@ class Cifar10Trainer(ClassifyTrainer):
 
         datagen.fit(self.x_train)
         self.generator = datagen.flow(self.x_train, self.y_train, batch_size=self.batch_size)
+        self.model_path = model_path
 
     def comp(self, parent, child):
         """
@@ -77,6 +79,28 @@ class Cifar10Trainer(ClassifyTrainer):
         x = Flatten()(output)
         x = Dense(self.num_classes, activation='softmax', name='softmax')(x)
         return x
+
+    def model_improved(self, model, score):
+        """
+
+        Parameters
+        ----------
+        model: keras.models.Model
+            model which has the best score for a CGP iteration
+
+        Returns
+        -------
+
+        """
+        base_path = os.path.abspath(self.model_path)
+        if not os.path.exists(base_path):
+            os.mkdir(base_path)
+
+        f = os.path.join(self.model_path, 'model_%s_score_%.3f.hdf5' % (model.name, score))
+        model.save(f)
+        plot_model(model, show_shapes=True,
+                   to_file=os.path.join(self.model_path, 'model_%s_score_%.3f.png' % (model.name, score)))
+        print("save model %s with score %.5f to file" % (f, score))
 
     def __call__(self, model):
         """

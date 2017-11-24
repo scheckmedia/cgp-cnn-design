@@ -25,6 +25,7 @@ class ClassifyTrainer:
         self.input_shape = input_shape
         self.batch_size = batch_size
         self.epochs = epochs
+        self.worst = float('-inf')
 
     def comp(self, parent, child):
         """
@@ -57,6 +58,9 @@ class ClassifyTrainer:
 
         """
         return output
+
+    def model_improved(self, model, score):
+        pass
 
     def __call__(self, model):
         """
