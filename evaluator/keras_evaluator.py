@@ -46,7 +46,7 @@ class Evaluator:
             score = self.trainer(model)
 
             self.models[child_number] = {'model': model.to_json(), 'weights': model.get_weights()}
-        return score
+            return score
 
     def get_function_input_list(self):
         """
