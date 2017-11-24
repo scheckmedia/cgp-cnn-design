@@ -21,10 +21,14 @@ def plot_graph(individual, filename=None, rankdir='TB'):
             n = individual.genes[idx]
 
             if isinstance(n, FunctionGen):
-                if hasattr(n.fnc, 'name'):
-                    name = n.fnc.name
+                fnc = individual.config.functions[n.fnc_idx]
+
+                if isinstance(fnc, str):
+                    name = fnc
+                elif hasattr(fnc, 'name'):
+                    name = fnc.name
                 else:
-                    name = n.fnc.__name__
+                    name = fnc.__name__
 
                 name += '_id_%d' % idx
             else:
@@ -85,71 +89,4 @@ def plot_cartesian(individual, filename='grid.png'):
             graph.add_edge(pydot.Edge(nodes[individual.genes[idx].inputs[con]], node))
 
     return graph
-
-def individual_to_keras_model(individual, input_shape=(64,64,3)):
-    if not isinstance(individual, Individual):
-        raise TypeError("Individual must be the type Individual")
-
-    plot_graph(individual, 'graph.png')
-
-    from keras.layers import Input, MaxPool2D, Concatenate
-    from keras.layers.merge import _Merge
-    import keras.backend as K
-    import tensorflow as tf
-
-    active_nodes = np.where(individual.active)[0]
-
-    nodes = {}
-    for i in range(individual.config.num_input):
-        node = Input(shape=input_shape, name='input-%d' % i)
-        nodes[i] = node
-
-    for idx in active_nodes:
-        n = individual.genes[idx]
-
-        if isinstance(n, FunctionGen):
-            nodes[idx + individual.config.num_input] = n.fnc
-
-    for idx in active_nodes:
-        if idx >= individual.config.num_nodes:
-            continue
-
-        node = nodes[idx + individual.config.num_input]
-        node.name += '_id_%d' % idx
-        print("node: %s" % node.name)
-
-        if isinstance(node, _Merge) and individual.genes[idx].num_inputs == 2:
-            x = []
-            shapes = []
-            for con in range(individual.genes[idx].num_inputs):
-                instance = nodes[individual.genes[idx].inputs[con]]
-                x.append(instance)
-                shapes.append(instance.shape.as_list())
-
-            _, a_width, a_height, a_channels = shapes[0]
-            _, b_width, b_height, b_channels = shapes[1]
-
-            if a_width > b_width:
-                x[0] = MaxPool2D(pool_size=(a_height // b_height, a_width // b_width))(x[0])
-            if a_width < b_width:
-                x[1] = MaxPool2D(pool_size=(b_height // a_height, b_width // a_width))(x[1])
-
-            if a_channels > b_channels:
-                diff = a_channels - b_channels
-                x[1] = tf.pad(x[1], ((0,0),(0,0),(0,0),(0, diff)), mode='CONSTANT')
-
-            elif a_channels < b_channels:
-                diff = b_channels - a_channels
-                x[0] = tf.pad(x[0], ((0, 0), (0, 0), (0, 0), (0, diff)), mode='CONSTANT')
-
-            print("")
-
-        elif individual.genes[idx].num_inputs == 1:
-            x = nodes[individual.genes[idx].inputs[0]]
-            #graph.add_edge(pydot.Edge(con_node, node))
-        else:
-            pass
-
-        print("call %s with value of %s" % (node.name, x.name if not isinstance(x, list) else [i.name for i in x]))
-        nodes[idx + individual.config.num_input] = node(x)
 
