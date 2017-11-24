@@ -1,9 +1,10 @@
 import operator
 from copy import deepcopy, copy
 from threading import Thread
-import pickle, os
+import _pickle as pickle, os
 import numpy as np
 import warnings
+
 
 # based on https://github.com/sg-nm/cgp-cnn/blob/master/
 # but for deeper details I can recommend  http://www.cartesiangp.co.uk/
@@ -408,17 +409,21 @@ class CGP:
             for t in threads:
                 t.join()
 
-            for child in children:
+            for idx, child in enumerate(children):
                 if evaluator.trainer.comp(self.parent.score, child.score):
                     if verbose:
                         print("child %.2f has a better score than parent %.2f" % (child.score, self.parent.score))
                         print('%s' % ('#' * 100))
 
                     self.parent = child
+                    evaluator.improved(idx, child.score)
+
                     if save_best is not None:
-                        if not os.path.exists(save_best):
-                            os.mkdir(os.path.abspath(os.path.dirname(save_best)))
+                        p = os.path.abspath(os.path.dirname(save_best))
+                        if not os.path.exists(p):
+                            os.mkdir(p)
 
                         with open(save_best, 'wb') as f:
-                            pickle.dump(self.parent, f, pickle.HIGHEST_PROTOCOL)
+                            pickle.dump(self.parent, f)
+
             current_epoch += 1
