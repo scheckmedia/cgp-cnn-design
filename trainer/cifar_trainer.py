@@ -9,7 +9,7 @@ from trainer.trainer import ClassifyTrainer
 import os
 
 class Cifar10Trainer(ClassifyTrainer):
-    def __init__(self, batch_size=32, epochs=100, verbose=1, model_path='tmp/'):
+    def __init__(self, batch_size=32, epochs=100, verbose=0, model_path='tmp/'):
         """
         A trainer class for the Cifar 10 dataset
 
@@ -117,7 +117,7 @@ class Cifar10Trainer(ClassifyTrainer):
             score of the best model
 
         """
-        optimizer = Adam(lr=0.001)
+        optimizer = Adam(lr=0.0005, decay=1e-5)
         metrics = ['accuracy']
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics)
         steps = len(self.x_test) // self.batch_size
