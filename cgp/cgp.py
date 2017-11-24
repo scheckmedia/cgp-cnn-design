@@ -1,13 +1,13 @@
 import operator
 from copy import deepcopy, copy
 from threading import Thread
-import pickle
+import pickle, os
 import numpy as np
-
+import warnings
 
 # based on https://github.com/sg-nm/cgp-cnn/blob/master/
 # but for deeper details I can recommend  http://www.cartesiangp.co.uk/
-# especially the free chapter 1 and 2 from the free the CGP book
+# especially the free chapter 1 and 2 from the CGP book
 
 
 class OutputGen:
@@ -18,17 +18,14 @@ class OutputGen:
 
 
 class FunctionGen:
-    def __init__(self, fnc, max_inputs, num_inputs):
-        if not callable(fnc):
-            raise TypeError("fnc must be callable")
-
-        self.fnc = fnc
+    def __init__(self, fnc_idx, max_inputs, num_inputs):
+        self.fnc_idx = fnc_idx
         self.inputs = np.zeros(max_inputs, dtype=int)
         self.num_inputs = num_inputs
         self.is_output = False
 
     def __str__(self):
-        return "fnc: %s with %s inputs" % (self.fnc, self.inputs)
+        return "fnc_idx: %s with %s inputs" % (self.fnc_idx, self.inputs)
 
 
 class CgpConfig:
@@ -77,18 +74,51 @@ class CgpConfig:
 
 class Individual:
     def __init__(self, config):
+        """
+        individual class containing genes which can be mutated
+        basically in a evolution strategy it is called a parent and/or child
+        Parameters
+        ----------
+        config
+        """
         if not isinstance(config, CgpConfig):
             raise ValueError("invalid value for config")
 
         self.config = config
         self.score = None
-
-        # init genes with a random function
         self.genes = []
-        for node in range(config.num_nodes + config.num_output):
+        self.active = None
+
+    @classmethod
+    def spawn(cls, config):
+        """
+        creates an instance of an individual and generates random gene connections
+
+        Parameters
+        ----------
+        config: CgpConfig
+            CGP configuration
+
+        Returns
+        -------
+            an individual with random gene connections
+        """
+        individual = cls(config)
+        individual.init_genes()
+        return individual
+
+    def init_genes(self):
+        """
+        creates random gene connections in the configured cartesian grid
+        Returns
+        -------
+
+        """
+        # init genes with a random function
+        for node in range(self.config.num_nodes + self.config.num_output):
             if node < self.config.num_nodes:
                 fnc_idx = np.random.randint(self.config.num_func_genes)
-                gene = FunctionGen(copy(self.config.functions[fnc_idx]),
+                gene = FunctionGen(fnc_idx,
                                    self.config.max_inputs,
                                    self.config.function_inputs[fnc_idx])
             else:
@@ -112,6 +142,20 @@ class Individual:
         self.active = np.empty(len(self.genes), dtype=bool)
         self.check_active()
 
+    def clone(self):
+        """
+        clones an individual
+        Returns
+        -------
+
+        """
+        instance = Individual(self.config)
+        instance.active = self.active.copy()
+        instance.genes = deepcopy(self.genes)
+        instance.score = self.score
+
+        return instance
+
     def __walk_to_out(self, node):
         if not self.active[node]:
             self.active[node] = True
@@ -123,10 +167,10 @@ class Individual:
     def __mutate_function_gene(self, gene_idx):
         # if not self.active[gene_idx]:
         fnc_idx = np.random.randint(self.config.num_func_genes)
-        while fnc_idx == self.config.functions.index(self.genes[gene_idx].fnc):
+        while fnc_idx == self.genes[gene_idx].fnc_idx:
             fnc_idx = np.random.randint(self.config.num_func_genes)
 
-        self.genes[gene_idx].fnc = self.config.functions[fnc_idx]
+        self.genes[gene_idx].fnc_idx = fnc_idx
         self.genes[gene_idx].num_inputs = self.config.function_inputs[fnc_idx]
 
         return True
@@ -152,17 +196,21 @@ class Individual:
 
     def mutate(self, force=True):
         """
-        lets a gene to mutate
+        mutates an individual based on the configured mutation rate
 
         Parameters
         ----------
         force: bool(True)
-            forces to mutate. if nothing changed it tries to mutate unitl something changed
+            forces to mutate. if nothing changed it tries to mutate until something changed
 
         Returns
         -------
         None
         """
+
+        if not self.is_spawned():
+            self.init_genes()
+
         if force:
             old_net = self.active.copy()
 
@@ -184,13 +232,29 @@ class Individual:
                 self.mutate(force)
 
     def check_active(self):
+        """
+        checks which node in the cartesian grid is active
+        Returns
+        -------
+
+        """
         self.active[:] = False
         for node in range(self.config.num_output):
             self.__walk_to_out(self.config.num_nodes + node)
 
+    def is_spawned(self):
+        """
+        checks whether a individual contains genes
+        Returns
+        -------
+        bool
+            True if an individual contains genes
+        """
+        return self.active is not None
+
     def num_active_nodes(self):
         """
-        counts number of active genes
+        counts number of active genes in the cartesian grid
 
         Returns
         -------
@@ -211,18 +275,18 @@ class Individual:
 
         active_cnt = np.arange(self.config.num_nodes + self.config.num_output + self.config.num_input)
         active_cnt[self.config.num_input:] = np.cumsum(self.active)
-
         out_idx = 0
         for node, active in enumerate(self.active):
             if not active:
                 continue
 
             con = [active_cnt[self.genes[node].inputs[i]] for i in range(self.genes[node].num_inputs)]
-            if hasattr(self.genes[node], 'fnc'):
-                if hasattr(self.genes[node].fnc, 'name'):
-                    name = self.genes[node].fnc.name
+            if isinstance(self.genes[node], FunctionGen):
+                fnc = self.config.functions[self.genes[node].fnc_idx]
+                if hasattr(fnc, 'name'):
+                    name = fnc.name
                 else:
-                    name = self.genes[node].fnc.__name__
+                    name = fnc.__name__
                 net.append([name + "_id_%d" % len(net)] + con)
             else:
                 net.append(['output-%d' % out_idx] + con)
@@ -232,7 +296,7 @@ class Individual:
 
 
 class CGP:
-    def __init__(self, config, children=2):
+    def __init__(self, config, children=2, parent=None):
         """
         apply Cartesian Genetic Programming to your problem
 
@@ -242,6 +306,8 @@ class CGP:
             configuration for cgp instance
         children: int(2)
             number of children for evolution strategy
+        parent: str
+            path to a parent which will be loaded as evolution start point
         """
         if not isinstance(config, CgpConfig):
             raise TypeError("config must be an instance of CgpConfig!")
@@ -249,12 +315,40 @@ class CGP:
         # create 1 parent + N childrens generations
         self.config = config
         self.num_children = children
+        self.parent = self.load_parent(parent)
 
     def __evaluator_wrapper(self, evaluator, child, index):
         score = evaluator(child, index)
         child.score = score
 
-    def run(self, evaluator, max_epochs=10, force_mutate=True, op=operator.gt, verbose=1):
+    def load_parent(self, filename):
+        """
+        loads an individual form which the evolution starts
+
+        Parameters
+        ----------
+        filename: str
+            path to the file which will be loaded
+
+        Returns
+        -------
+        Individual
+            loaded instance of an Individual
+        """
+        if filename is None or not os.path.exists(filename):
+            return None
+
+        with open(filename, 'rb') as f:
+            instance = pickle.load(f)
+
+            if not isinstance(instance, Individual):
+                warnings.warn('parent is not a valid Individual instance')
+                return None
+
+            return instance
+
+
+    def run(self, evaluator, max_epochs=10, force_mutate=True, save_best=None, verbose=1):
         """
         starts evaluation and searching process for a problem
 
@@ -272,27 +366,37 @@ class CGP:
             compare operation to determine which score is better for a parent and an individual
             e. g. operator.gt means parent.score > child.score so the score of a child must be smaller to be
             the best of an epoch
+        save_best: str(None)
+            if save_best is an path, the best child will be saved to it
+        verbose: int(1)
+            if 1 then a message will be printed after an evaluation
+
 
         Returns
         -------
 
         """
-        # todo: optional load/save best model
 
         if not callable(evaluator):
             raise TypeError("evaluator must be callable")
 
-        parent = Individual(self.config)
-        self.__evaluator_wrapper(evaluator, parent, 0)
+        if self.parent is None:
+            self.parent = Individual.spawn(self.config)
+
+        if verbose > 0:
+            print('%s\nevaluate parent\n%s' % ('#' * 100, '#' * 100))
+        self.__evaluator_wrapper(evaluator, self.parent, 0)
         current_epoch = 0
 
         threads = [None] * self.num_children
         children = [None] * self.num_children
 
         while current_epoch < max_epochs:
+            if verbose > 0:
+                print('%s' % ('#' * 100))
+                print("CGP Epoch %d" % (current_epoch + 1))
             for i in range(self.num_children):
-                # mutated = deepcopy(parent)
-                mutated = pickle.loads(pickle.dumps(parent, -1))
+                mutated = self.parent.clone()
                 mutated.mutate(force_mutate)
 
                 threads[i] = Thread(target=self.__evaluator_wrapper, args=(evaluator, mutated, i + 1))
@@ -305,9 +409,16 @@ class CGP:
                 t.join()
 
             for child in children:
-                if op(parent.score, child.score):
+                if evaluator.trainer.comp(self.parent.score, child.score):
                     if verbose:
-                        print("child %.2f has a better score than parent %.2f" % (child.score, parent.score))
-                        plot_graph(parent, filename='tmp/mutation_%d.png' % current_epoch)
-                    parent = child
+                        print("child %.2f has a better score than parent %.2f" % (child.score, self.parent.score))
+                        print('%s' % ('#' * 100))
+
+                    self.parent = child
+                    if save_best is not None:
+                        if not os.path.exists(save_best):
+                            os.mkdir(os.path.abspath(os.path.dirname(save_best)))
+
+                        with open(save_best, 'wb') as f:
+                            pickle.dump(self.parent, f, pickle.HIGHEST_PROTOCOL)
             current_epoch += 1
