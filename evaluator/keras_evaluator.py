@@ -2,16 +2,17 @@ import warnings
 import numpy as np
 from cgp.cgp import Individual, FunctionGen, OutputGen
 from keras.layers import Lambda, MaxPooling2D, Dense, Flatten
-from keras.models import Model
+from keras.models import Model, model_from_config, model_from_json
 import keras.backend as K
 import tensorflow as tf
-
+from layers.pad import PadZeros
 
 class Evaluator:
     def __init__(self, function_mapping, trainer, input_shape=(64, 64, 3)):
         self.function_mapping = function_mapping
         self.input_shape = input_shape
         self.trainer = trainer
+        self.models = {}
 
     def __call__(self, child, child_number):
         """
@@ -40,9 +41,12 @@ class Evaluator:
 
             if model is None:
                 warnings.warn('skip model cause it is invalid')
-                return 1000000
+                return self.trainer.worst
 
-            return self.trainer(model)
+            score = self.trainer(model)
+
+            self.models[child_number] = {'model': model.to_json(), 'weights': model.get_weights()}
+        return score
 
     def get_function_input_list(self):
         """
@@ -143,11 +147,11 @@ class Evaluator:
 
                     if a_channels > b_channels:
                         diff = a_channels - b_channels
-                        x[1] = Lambda(lambda x: tf.pad(x, ((0, 0), (0, 0), (0, 0), (0, diff)), mode='CONSTANT'))(x[1])
+                        x[1] = PadZeros(diff, name='pad_%d' % idx)(x[1])
 
                     elif a_channels < b_channels:
                         diff = b_channels - a_channels
-                        x[0] = Lambda(lambda x: tf.pad(x, ((0, 0), (0, 0), (0, 0), (0, diff)), mode='CONSTANT'))(x[0])
+                        x[0] = PadZeros(diff, name='pad_%d' % idx)(x[0])
 
                 elif individual.genes[idx].num_inputs == 1:
                     x = nodes[individual.genes[idx].inputs[0]]
@@ -167,4 +171,12 @@ class Evaluator:
         except Exception as ex:
             warnings.warn("can't build model:\n%s" % ex)
             return None
+
+    def improved(self, child_number, score):
+        with tf.Session(graph=tf.Graph()) as sess:
+            K.set_session(sess)
+            model, weights = self.models[child_number]['model'], self.models[child_number]['weights']
+            model = model_from_json(model, custom_objects={'PadZeros': PadZeros})
+            self.trainer.model_improved(model, score)
+
 
