@@ -1,7 +1,8 @@
 from keras.datasets import cifar10
 from keras.utils import to_categorical, plot_model
 from keras.preprocessing.image import ImageDataGenerator
-from keras.optimizers import Adam
+from keras.optimizers import SGD
+from keras.callbacks import LearningRateScheduler
 from keras.layers import Dense, Flatten
 import numpy as np
 import operator
@@ -9,7 +10,7 @@ from trainer.trainer import ClassifyTrainer
 import os
 
 class Cifar10Trainer(ClassifyTrainer):
-    def __init__(self, batch_size=32, epochs=100, verbose=0, model_path='tmp/'):
+    def __init__(self, batch_size=32, epochs=100, verbose=0, lr=None, model_path='tmp/'):
         """
         A trainer class for the Cifar 10 dataset
 
@@ -46,6 +47,8 @@ class Cifar10Trainer(ClassifyTrainer):
         datagen.fit(self.x_train)
         self.generator = datagen.flow(self.x_train, self.y_train, batch_size=self.batch_size)
         self.model_path = model_path
+
+        self.learning_rates = lr
 
     def comp(self, parent, child):
         """
@@ -117,11 +120,19 @@ class Cifar10Trainer(ClassifyTrainer):
             score of the best model
 
         """
-        optimizer = Adam(lr=0.0005, decay=1e-5)
+
+        callbacks = []
+        if self.learning_rates:
+            lr_idx = (self.epochs // len(self.learning_rates))
+            lr_scheduler = LearningRateScheduler(lambda epoch: self.learning_rates[epoch // lr_idx])
+            callbacks.append(lr_scheduler)
+
+        optimizer = SGD(lr=0.01, decay=1e-5, momentum=0.9)
         metrics = ['accuracy']
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics)
         steps = len(self.x_test) // self.batch_size
         history = model.fit_generator(generator=self.generator, steps_per_epoch=steps, epochs=self.epochs,
-                                      validation_data=(self.x_test, self.y_test), workers=4, verbose=self.verbose)
+                                      validation_data=(self.x_test, self.y_test), workers=4, verbose=self.verbose,
+                                      callbacks=callbacks)
 
         return np.max(history.history['val_acc'])
