@@ -395,7 +395,7 @@ class CGP:
         while current_epoch < max_epochs:
             if verbose > 0:
                 print('%s' % ('#' * 100))
-                print("CGP Epoch %d" % (current_epoch + 1))
+                print("CGP Epoch %d of %d" % (current_epoch + 1, max_epochs))
             for i in range(self.num_children):
                 mutated = self.parent.clone()
                 mutated.mutate(force_mutate)
