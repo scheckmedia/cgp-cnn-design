@@ -1,24 +1,28 @@
 import warnings
 import numpy as np
 from cgp.cgp import Individual, FunctionGen, OutputGen
-from keras.layers import Lambda, MaxPooling2D, Dense, Flatten
-from keras.models import Model, model_from_config, model_from_json
+from keras.layers import MaxPooling2D, BatchNormalization, Conv2D, Activation
+from keras.applications.mobilenet import DepthwiseConv2D
+from keras.models import Model, model_from_json
 import keras.backend as K
 import tensorflow as tf
 from layers.pad import PadZeros
+from threading import Lock
 
 class Evaluator:
-    def __init__(self, function_mapping, trainer, input_shape=(64, 64, 3)):
+    def __init__(self, function_mapping, trainer, add_batch_norm=True, input_shape=(64, 64, 3)):
         self.function_mapping = function_mapping
         self.input_shape = input_shape
         self.trainer = trainer
         self.models = {}
+        self.add_batch_norm = add_batch_norm
+        self.mutex = Lock()
 
     def __call__(self, child, child_number):
         """
         this method is called to evaluate a child and measure the score
 
-        it contains the whole logic to translate a cgp individual into a keras model
+        it contains thee logi wholc to translate a cgp individual into a keras model
         and the evaluation (train a model and create a score for a child) as well
         Parameters
         ----------
@@ -45,7 +49,12 @@ class Evaluator:
 
             score = self.trainer(model)
 
-            self.models[child_number] = {'model': model.to_json(), 'weights': model.get_weights()}
+            try:
+                self.mutex.acquire()
+                self.models[child_number] = {'model': model.to_json(), 'weights': model.get_weights()}
+            finally:
+                self.mutex.release()
+
             return score
 
     def get_function_input_list(self):
@@ -156,7 +165,15 @@ class Evaluator:
                 elif individual.genes[idx].num_inputs == 1:
                     x = nodes[individual.genes[idx].inputs[0]]
 
-                nodes[idx + individual.config.num_input] = node(x)
+
+                if self.add_batch_norm and isinstance(node, Conv2D):
+                    x = node(x)
+                    x = BatchNormalization(axis=-1, name='%s_bn' % node.name)(x)
+                    x = Activation('relu',  name='%s_act' % node.name)(x)
+                else:
+                    x = node(x)
+
+                nodes[idx + individual.config.num_input] = x
 
             keys = list(nodes.keys())
             inputs = [nodes[i] for i in keys[:individual.config.num_input]]
@@ -175,8 +192,10 @@ class Evaluator:
     def improved(self, child_number, score):
         with tf.Session(graph=tf.Graph()) as sess:
             K.set_session(sess)
+            self.mutex.acquire()
             model, weights = self.models[child_number]['model'], self.models[child_number]['weights']
-            model = model_from_json(model, custom_objects={'PadZeros': PadZeros})
+            self.mutex.release()
+            model = model_from_json(model, custom_objects={'PadZeros': PadZeros, 'DepthwiseConv2D': DepthwiseConv2D})
             self.trainer.model_improved(model, score)
 
 
