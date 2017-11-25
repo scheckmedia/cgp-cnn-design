@@ -1,8 +1,7 @@
 import os
-from types import NoneType
 
 import numpy as np
-from .cgp import FunctionGen, Individual
+from .cgp import FunctionGen
 
 def plot_graph(individual, filename=None, rankdir='TB'):
     try:
