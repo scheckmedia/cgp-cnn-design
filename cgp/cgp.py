@@ -341,6 +341,7 @@ class CGP:
 
         with open(filename, 'rb') as f:
             instance = pickle.load(f)
+            print("loaded file %s with score %.4f" % (filename, instance.score))
 
             if not isinstance(instance, Individual):
                 warnings.warn('parent is not a valid Individual instance')
