@@ -38,7 +38,7 @@ class Evaluator:
         with tf.Session(graph=tf.Graph()) as sess:
             K.set_session(sess)
             model = self.individual_to_keras_model(child, child_number)
-            
+
             # model is too complex or invalid so we skip it and
             # assign a high value that ensures this child is worst child ever
             if model is None:
