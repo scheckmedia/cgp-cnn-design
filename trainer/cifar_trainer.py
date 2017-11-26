@@ -1,8 +1,12 @@
+import tensorflow as tf
+from tensorflow.python.framework import ops
+
+import keras.backend as K
 from keras.datasets import cifar10
 from keras.utils import to_categorical, plot_model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD
-from keras.callbacks import LearningRateScheduler
+from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras.layers import Dense, Flatten
 import numpy as np
 import operator
@@ -120,6 +124,10 @@ class Cifar10Trainer(ClassifyTrainer):
             score of the best model
 
         """
+        # tf_run_params = {
+        #     'options': tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
+        #     'run_metadata': tf.RunMetadata()
+        # }
 
         callbacks = []
         if self.learning_rates:
@@ -127,12 +135,32 @@ class Cifar10Trainer(ClassifyTrainer):
             lr_scheduler = LearningRateScheduler(lambda epoch: self.learning_rates[epoch // lr_idx])
             callbacks.append(lr_scheduler)
 
+        callbacks.append(EarlyStopping(monitor='val_acc', mode='max', patience=20, min_delta=0.001, verbose=1))
+
         optimizer = SGD(lr=0.01, decay=1e-5, momentum=0.9)
         metrics = ['accuracy']
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics)
+
         steps = len(self.x_test) // self.batch_size
         history = model.fit_generator(generator=self.generator, steps_per_epoch=steps, epochs=self.epochs,
                                       validation_data=(self.x_test, self.y_test), workers=4, verbose=self.verbose,
                                       callbacks=callbacks)
+
+        # TODO: score calculation dependent on params and flops
+        # get total model flops and total params
+        # its not working for flops and I dont know how to get it running
+        # flops = tf.profiler.profile(K.get_session().graph, cmd='op', options=tf.profiler.ProfileOptionBuilder.float_operation())
+        # opt = tf.profiler.ProfileOptionBuilder.trainable_variables_parameter()
+        # params = tf.profiler.profile(K.get_session().graph, options=opt)
+        # opt['output'] = 'none'
+        # print("total flops %d and total params %d" % (flops.total_float_ops, params.total_parameters))
+
+        total_params = 0
+        for layer in model.layers:
+            total_params += layer.count_params()
+
+        # one option
+        max_params = 25560000.0  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
+        params_factor = 1 - (min(max_params, total_params) / max_params)
 
         return np.max(history.history['val_acc'])

@@ -35,14 +35,12 @@ class Evaluator:
         -------
             score value for a given child
         """
-
         with tf.Session(graph=tf.Graph()) as sess:
             K.set_session(sess)
             model = self.individual_to_keras_model(child, child_number)
-
+            
             # model is too complex or invalid so we skip it and
             # assign a high value that ensures this child is worst child ever
-
             if model is None:
                 warnings.warn('skip model cause it is invalid')
                 return self.trainer.worst
@@ -196,6 +194,7 @@ class Evaluator:
             model, weights = self.models[child_number]['model'], self.models[child_number]['weights']
             self.mutex.release()
             model = model_from_json(model, custom_objects={'PadZeros': PadZeros, 'DepthwiseConv2D': DepthwiseConv2D})
+
             self.trainer.model_improved(model, score)
 
 
