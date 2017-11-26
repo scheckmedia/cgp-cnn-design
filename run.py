@@ -1,4 +1,4 @@
-from keras.layers import Conv2D, MaxPool2D, AveragePooling2D, Maximum, Add, Concatenate, BatchNormalization
+from keras.layers import Conv2D, MaxPool2D, AveragePooling2D, Multiply, Add, Concatenate, SeparableConv2D
 from keras.applications.mobilenet import DepthwiseConv2D
 from cgp.cgp import CgpConfig, CGP
 from evaluator.keras_evaluator import Evaluator
@@ -9,18 +9,23 @@ def conv_block(**kwargs):
     x = Conv2D(**kwargs)
 
 function_mapping = {
-    'conv_3x3_32_stride_1': {'cls': Conv2D, 'args': {'filters': 32, 'kernel_size': 3, 'strides': 1}, 'inputs': 1},
-    'conv_3x3_64_stride_1': {'cls': Conv2D, 'args': {'filters': 64, 'kernel_size': 3, 'strides': 1}, 'inputs': 1},
-    'conv_3x3_128_stride_1': {'cls': Conv2D, 'args': {'filters': 128, 'kernel_size': 3, 'strides': 1}, 'inputs': 1},
-    'conv_3x3_32_stride_2': {'cls': Conv2D, 'args': {'filters': 32, 'kernel_size': 3, 'strides': 2}, 'inputs': 1},
-    'conv_3x3_64_stride_2': {'cls': Conv2D, 'args': {'filters': 64, 'kernel_size': 3, 'strides': 2}, 'inputs': 1},
-    'conv_3x3_128_stride_2': {'cls': Conv2D, 'args': {'filters': 128, 'kernel_size': 3, 'strides': 2}, 'inputs': 1},
-    'dw_3x3_stride_2': {'cls': DepthwiseConv2D, 'args': {'kernel_size': 3, 'strides': 2}, 'inputs': 1},
-    'dw_3x3_stride_2': {'cls': DepthwiseConv2D, 'args': {'kernel_size': 3, 'strides': 2}, 'inputs': 1},
-    'dw_3x3_stride_2': {'cls': DepthwiseConv2D, 'args': {'kernel_size': 3, 'strides': 2}, 'inputs': 1},
+    'conv_3x3_32_stride_1': {'cls': Conv2D, 'args': {'filters': 32, 'kernel_size': 3, 'strides': 1, 'padding': 'same'}, 'inputs': 1},
+    'conv_3x3_64_stride_1': {'cls': Conv2D, 'args': {'filters': 64, 'kernel_size': 3, 'strides': 1, 'padding': 'same'}, 'inputs': 1},
+    'conv_3x3_128_stride_1': {'cls': Conv2D, 'args': {'filters': 128, 'kernel_size': 3, 'strides': 1, 'padding': 'same'}, 'inputs': 1},
+    # 'conv_3x3_256_stride_1': {'cls': Conv2D, 'args': {'filters': 256, 'kernel_size': 3, 'strides': 1, 'padding': 'same'}, 'inputs': 1},
+    'dw_3x3_stride_1': {'cls': DepthwiseConv2D, 'args': {'kernel_size': 3, 'padding': 'same', 'strides': 1}, 'inputs': 1},
+    'dw_5x5_stride_1': {'cls': DepthwiseConv2D, 'args': {'kernel_size': 5, 'padding': 'same', 'strides': 1}, 'inputs': 1},
+    'dw_7x7_stride_1': {'cls': DepthwiseConv2D, 'args': {'kernel_size': 7, 'padding': 'same', 'strides': 1}, 'inputs': 1},
+    #'dwpw_3x3_32_stride_1': {'cls': SeparableConv2D, 'args': {'filters': 32, 'kernel_size': 3, 'strides': 1}, 'inputs': 1},
+    #'dwpw_3x3_64_stride_1': {'cls': SeparableConv2D, 'args': {'filters': 64, 'kernel_size': 3, 'strides': 1}, 'inputs': 1},
+    #'dwpw_3x3_128_stride_1': {'cls': SeparableConv2D, 'args': {'filters': 128, 'kernel_size': 3, 'strides': 1}, 'inputs': 1},
     'max_pooling_2x2': {'cls': MaxPool2D, 'args': {'pool_size': 2}, 'inputs': 1},
     'avg_pooling_2x2': {'cls': AveragePooling2D, 'args': {'pool_size': 2}, 'inputs': 1},
+    # 'max_pooling_2x2_2': {'cls': MaxPool2D, 'args': {'pool_size': 2}, 'inputs': 1},
+    # 'avg_pooling_2x2_2': {'cls': AveragePooling2D, 'args': {'pool_size': 2}, 'inputs': 1},
     'add': {'cls': Add, 'args': {}, 'inputs': 2},
+    'add_2': {'cls': Add, 'args': {}, 'inputs': 2},
+    'concat_2': {'cls': Concatenate, 'args': {}, 'inputs': 2},
     'concat': {'cls': Concatenate, 'args': {}, 'inputs': 2}
 }
 
