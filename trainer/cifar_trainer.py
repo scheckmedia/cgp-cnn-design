@@ -124,10 +124,13 @@ class Cifar10Trainer(ClassifyTrainer):
             score of the best model
 
         """
-        # tf_run_params = {
-        #     'options': tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
-        #     'run_metadata': tf.RunMetadata()
-        # }
+        run_meta = tf.RunMetadata()
+        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+
+        tf_run_params = {
+             'options': run_options,
+             'run_metadata': run_meta
+        }
 
         callbacks = []
         if self.learning_rates:
@@ -135,11 +138,11 @@ class Cifar10Trainer(ClassifyTrainer):
             lr_scheduler = LearningRateScheduler(lambda epoch: self.learning_rates[epoch // lr_idx])
             callbacks.append(lr_scheduler)
 
-        callbacks.append(EarlyStopping(monitor='val_acc', mode='max', patience=20, min_delta=0.001, verbose=1))
+        callbacks.append(EarlyStopping(monitor='val_acc', mode='max', patience=10, min_delta=0.001, verbose=1))
 
-        optimizer = SGD(lr=0.01, decay=1e-5, momentum=0.9)
+        optimizer = SGD(lr=0.01, decay=5e-4, momentum=0.9)
         metrics = ['accuracy']
-        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics)
+        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics, **tf_run_params)
 
         steps = len(self.x_test) // self.batch_size
         history = model.fit_generator(generator=self.generator, steps_per_epoch=steps, epochs=self.epochs,
@@ -147,20 +150,29 @@ class Cifar10Trainer(ClassifyTrainer):
                                       callbacks=callbacks)
 
         # TODO: score calculation dependent on params and flops
-        # get total model flops and total params
-        # its not working for flops and I dont know how to get it running
-        # flops = tf.profiler.profile(K.get_session().graph, cmd='op', options=tf.profiler.ProfileOptionBuilder.float_operation())
-        # opt = tf.profiler.ProfileOptionBuilder.trainable_variables_parameter()
-        # params = tf.profiler.profile(K.get_session().graph, options=opt)
-        # opt['output'] = 'none'
-        # print("total flops %d and total params %d" % (flops.total_float_ops, params.total_parameters))
+        option_builder = tf.profiler.ProfileOptionBuilder
+        profiler = tf.profiler.Profiler(K.get_session().graph)
+        profiler.add_step(0, run_meta)
 
-        total_params = 0
-        for layer in model.layers:
-            total_params += layer.count_params()
+        opt = option_builder.float_operation()
+        opt['output'] = 'none'
+        flops = profiler.profile_name_scope(options=opt)
 
-        # one option
-        max_params = 25560000.0  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
+        opt = option_builder.trainable_variables_parameter()
+        opt['output'] = 'none'
+        params = profiler.profile_name_scope(options=opt)
+
+        total_flops, total_params = flops.total_float_ops, params.total_parameters
+        max_params = 25.5 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
+        max_flops = 4.1 * 10**9  # max number of flops # e.g. 3858M of ResNet 50
+
         params_factor = 1 - (min(max_params, total_params) / max_params)
+        flops_factor = 1 - (min(max_flops, total_flops) / max_flops)
+
+
+        print("\n%s" % ("-" * 100))
+        print("params: %d, %.2f ---> flops: %s, %.2f" %
+              (total_params, params_factor, "{:,}".format(total_flops), flops_factor))
+        print("%s\n" % ("-" * 100))
 
         return np.max(history.history['val_acc'])
