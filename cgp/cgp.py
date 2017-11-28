@@ -318,8 +318,8 @@ class CGP:
         self.num_children = children
         self.parent = self.load_parent(parent)
 
-    def __evaluator_wrapper(self, evaluator, child, index):
-        score = evaluator(child, index)
+    def __evaluator_wrapper(self, evaluator, child, index, epoch):
+        score = evaluator(child, index, epoch)
         child.score = score
 
     def load_parent(self, filename):
@@ -387,7 +387,7 @@ class CGP:
 
         if verbose > 0:
             print('%s\nevaluate parent\n%s' % ('#' * 100, '#' * 100))
-        self.__evaluator_wrapper(evaluator, self.parent, 0)
+        self.__evaluator_wrapper(evaluator, self.parent, 0, 0)
         current_epoch = 0
 
         threads = [None] * self.num_children
@@ -401,7 +401,7 @@ class CGP:
                 mutated = self.parent.clone()
                 mutated.mutate(force_mutate)
 
-                threads[i] = Thread(target=self.__evaluator_wrapper, args=(evaluator, mutated, i + 1))
+                threads[i] = Thread(target=self.__evaluator_wrapper, args=(evaluator, mutated, i + 1, current_epoch + 1))
                 children[i] = mutated
 
             for t in threads:
