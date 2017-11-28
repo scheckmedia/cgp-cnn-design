@@ -62,7 +62,7 @@ class ClassifyTrainer:
     def model_improved(self, model, score):
         pass
 
-    def __call__(self, model):
+    def __call__(self, model, epoch):
         """
         starts the training of a keras model
 
