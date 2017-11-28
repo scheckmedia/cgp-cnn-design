@@ -1,7 +1,6 @@
 import tensorflow as tf
-from tensorflow.python.framework import ops
-
 import keras.backend as K
+from keras.models import clone_model
 from keras.datasets import cifar10
 from keras.utils import to_categorical, plot_model
 from keras.preprocessing.image import ImageDataGenerator
@@ -12,9 +11,11 @@ import numpy as np
 import operator
 from trainer.trainer import ClassifyTrainer
 import os
+import csv
+
 
 class Cifar10Trainer(ClassifyTrainer):
-    def __init__(self, batch_size=32, epochs=100, verbose=0, lr=None, model_path='tmp/'):
+    def __init__(self, batch_size=32, epochs=100, verbose=0, lr=None, model_path='tmp/', stats_path='tmp/'):
         """
         A trainer class for the Cifar 10 dataset
 
@@ -51,8 +52,14 @@ class Cifar10Trainer(ClassifyTrainer):
         datagen.fit(self.x_train)
         self.generator = datagen.flow(self.x_train, self.y_train, batch_size=self.batch_size)
         self.model_path = model_path
-
+        self.stats_path = stats_path
+        self._csv_file = os.path.join(self.stats_path, 'stats.csv')
         self.learning_rates = lr
+
+        with open(self._csv_file, 'w') as f:
+            header = ['epoch', 'val_acc', 'val_loss', 'params', 'flops', 'score']
+            w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+            w.writerow(header)
 
     def comp(self, parent, child):
         """
@@ -109,7 +116,7 @@ class Cifar10Trainer(ClassifyTrainer):
                    to_file=os.path.join(self.model_path, 'model_%s_score_%.3f.png' % (model.name, score)))
         print("save model %s with score %.5f to file" % (f, score))
 
-    def __call__(self, model):
+    def __call__(self, model, epoch):
         """
         starts the training of a keras model
 
@@ -125,12 +132,6 @@ class Cifar10Trainer(ClassifyTrainer):
 
         """
         run_meta = tf.RunMetadata()
-        run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-
-        tf_run_params = {
-             'options': run_options,
-             'run_metadata': run_meta
-        }
 
         callbacks = []
         if self.learning_rates:
@@ -140,39 +141,56 @@ class Cifar10Trainer(ClassifyTrainer):
 
         callbacks.append(EarlyStopping(monitor='val_acc', mode='max', patience=10, min_delta=0.001, verbose=1))
 
+        _ = clone_model(model, input_tensors=tf.placeholder('float32', shape=(1,32,32,3)))
+        option_builder = tf.profiler.ProfileOptionBuilder
+        profiler = tf.profiler.profile
+
+        opt = option_builder.float_operation()
+        opt['output'] = 'none'
+        flops = profiler(K.get_session().graph, run_meta=run_meta, options=opt)
+
+        opt = option_builder.trainable_variables_parameter()
+        opt['output'] = 'none'
+        params = profiler(K.get_session().graph, run_meta=run_meta, options=opt)
+
+        # it seems that maac in tensorflow is counted as two operations
+        # I divide the flops by two to get a nearly similar value
+        total_flops, total_params = flops.total_float_ops // 2, params.total_parameters
+        max_params = 4 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
+        max_flops = 10 * 10**6    # max number of flops # e.g. 3858M of ResNet 50
+
+        params_factor = 1 - (min(max_params, total_params) / max_params)
+        flops_factor = 1 - (min(max_flops, total_flops) / max_flops)
+
+        if params_factor <= 0.0 or flops_factor <= 0.0:
+            return 0
+
         optimizer = SGD(lr=0.01, decay=5e-4, momentum=0.9)
         metrics = ['accuracy']
-        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics, **tf_run_params)
+        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics)
 
         steps = len(self.x_test) // self.batch_size
         history = model.fit_generator(generator=self.generator, steps_per_epoch=steps, epochs=self.epochs,
                                       validation_data=(self.x_test, self.y_test), workers=4, verbose=self.verbose,
                                       callbacks=callbacks)
 
-        # TODO: score calculation dependent on params and flops
-        option_builder = tf.profiler.ProfileOptionBuilder
-        profiler = tf.profiler.Profiler(K.get_session().graph)
-        profiler.add_step(0, run_meta)
+        acc = np.max(history.history['val_acc'])
+        loss = np.min(history.history['val_loss'])
 
-        opt = option_builder.float_operation()
-        opt['output'] = 'none'
-        flops = profiler.profile_name_scope(options=opt)
-
-        opt = option_builder.trainable_variables_parameter()
-        opt['output'] = 'none'
-        params = profiler.profile_name_scope(options=opt)
-
-        total_flops, total_params = flops.total_float_ops, params.total_parameters
-        max_params = 25.5 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
-        max_flops = 4.1 * 10**9  # max number of flops # e.g. 3858M of ResNet 50
-
-        params_factor = 1 - (min(max_params, total_params) / max_params)
-        flops_factor = 1 - (min(max_flops, total_flops) / max_flops)
-
+        score = params_factor * flops_factor * acc
 
         print("\n%s" % ("-" * 100))
-        print("params: %d, %.2f ---> flops: %s, %.2f" %
-              (total_params, params_factor, "{:,}".format(total_flops), flops_factor))
+        print("acc: %.2f ---> params: %d, %.2f ---> flops: %s, %.2f ---> score: %.2f" %
+              (acc, total_params, params_factor, "{:,}".format(total_flops), flops_factor, score))
         print("%s\n" % ("-" * 100))
 
-        return np.max(history.history['val_acc'])
+        if self.stats_path:
+            if not os.path.exists(self.stats_path):
+                os.mkdir(self.stats_path)
+
+            with open(self._csv_file, 'a') as f:
+                header = [epoch, acc, loss, total_params, total_flops, score]
+                w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+                w.writerow(header)
+
+        return score
