@@ -18,7 +18,7 @@ class Evaluator:
         self.add_batch_norm = add_batch_norm
         self.mutex = Lock()
 
-    def __call__(self, child, child_number):
+    def __call__(self, child, child_number, epoch):
         """
         this method is called to evaluate a child and measure the score
 
@@ -45,7 +45,7 @@ class Evaluator:
                 warnings.warn('skip model cause it is invalid')
                 return self.trainer.worst
 
-            score = self.trainer(model)
+            score = self.trainer(model, epoch)
 
             try:
                 self.mutex.acquire()
