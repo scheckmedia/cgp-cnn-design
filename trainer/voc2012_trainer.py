@@ -1,63 +1,84 @@
 import tensorflow as tf
 import keras.backend as K
 from keras.models import clone_model
-from keras.datasets import cifar10
 from keras.utils import to_categorical, plot_model
-from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import SGD, Adam
-from keras.callbacks import LearningRateScheduler, EarlyStopping
-from keras.layers import Dense, Flatten, GlobalMaxPooling2D
+from keras.callbacks import LearningRateScheduler, EarlyStopping, LambdaCallback
+from keras.layers import Dense, Conv2D, Activation
 import numpy as np
 import operator
 from trainer.trainer import ClassifyTrainer
+from fcn_utils.activations import softmax_4d
+from fcn_utils.callbacks import MeanIoUCallback
+from fcn_utils.SegDataGenerator import SegDataGenerator
+from fcn_utils.metrics import sparse_accuracy_ignoring_last_label, iou
+from fcn_utils.loss_function import softmax_sparse_crossentropy_ignoring_last_label
+from fcn_utils.BilinearUpSampling import BilinearUpSampling2D
 import os
 import csv
 
 
-class Cifar10Trainer(ClassifyTrainer):
-    def __init__(self, batch_size=32, epochs=100, verbose=0, lr=None, model_path='tmp/', stats_path='tmp/'):
+class Voc2012Trainer(ClassifyTrainer):
+    def __init__(self, input_shape=(160, 160, 3), target_size=(160, 160),
+                 voc_root='', batch_size=16, epochs=100, verbose=0,
+                 lr=None, model_path='tmp/', stats_path='tmp/', classes=21):
         """
-        A trainer class for the Cifar 10 dataset
+        A trainer class for VOC2012 dataset
 
         Parameters
         ----------
         batch_size: int(32)
             batch_size for cifar10 dataset
         epochs: int(100)
-            number of epochs are used for each training process
-        verbose: int(1)
+            number of epochs are used for each training process*
+        verbose: int(1)ping server
+
             see keras.model.fit_generator
         """
 
-        (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-        input_shape = x_train.shape[1:]
-
-        ClassifyTrainer.__init__(self, batch_size=batch_size, num_classes=10, input_shape=input_shape,
+        ClassifyTrainer.__init__(self, batch_size=batch_size, num_classes=classes, input_shape=input_shape,
                                  epochs=epochs, verbose=verbose)
 
-        self.y_train = to_categorical(y_train, self.num_classes)
-        self.y_test = to_categorical(y_test, self.num_classes)
-
-        self.x_train = x_train.astype('float32')
-        self.x_test = x_test.astype('float32')
-        self.x_train /= 255
-        self.x_test /= 255
-
-
-        datagen = ImageDataGenerator(
-            width_shift_range=0.1,
-            height_shift_range=0.1,
-            horizontal_flip=True)
-
-        datagen.fit(self.x_train)
-        self.generator = datagen.flow(self.x_train, self.y_train, batch_size=self.batch_size)
+        self.file_path = os.path.join(voc_root, 'ImageSets', 'Segmentation', 'train.txt')
+        self.val_file_path = os.path.join(voc_root, 'ImageSets', 'Segmentation', 'val.txt')
+        self.data_dir = os.path.join(voc_root, 'JPEGImages')
+        self.label_dir = os.path.join(voc_root, 'SegmentationClass')
+        self.data_suffix = '.jpg'
+        self.label_suffix = '.png'
+        self.target_size = target_size
         self.model_path = model_path
         self.stats_path = stats_path
         self._csv_file = os.path.join(self.stats_path, 'stats.csv')
         self.learning_rates = lr
 
+
+        self.train_datagen = SegDataGenerator(
+                                         horizontal_flip=True,
+                                         fill_mode='constant',
+                                         label_cval=255)
+
+        self.generator = self.train_datagen.flow_from_directory(
+            file_path=self.file_path,
+            data_dir=self.data_dir, data_suffix=self.data_suffix,
+            label_dir=self.label_dir, label_suffix=self.label_suffix,
+            classes=self.num_classes,
+            target_size=self.target_size, color_mode='rgb',
+            batch_size=self.batch_size, shuffle=True,
+            loss_shape=None,
+            ignore_label=255,
+            # save_to_dir='Images/'
+        )
+        self.val_generator = SegDataGenerator().flow_from_directory(
+            file_path=self.val_file_path,
+            data_dir=self.data_dir, data_suffix=self.data_suffix,
+            label_dir=self.label_dir, label_suffix=self.label_suffix,
+            classes=self.num_classes,
+            target_size=self.target_size, color_mode='rgb',
+            batch_size=self.batch_size, shuffle=False
+        )
+
         with open(self._csv_file, 'w') as f:
-            header = ['epoch', 'val_acc', 'val_loss', 'params', 'flops', 'score']
+            header = ['epoch', 'acc', 'loss', 'mean_iou', 'params', 'flops', 'score']
             w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
             w.writerow(header)
 
@@ -77,7 +98,7 @@ class Cifar10Trainer(ClassifyTrainer):
         """
         return operator.lt(parent, child)
 
-    def append_output_layer(self, output):
+    def append_output_layer(self, x):
         """
         appends the last layer (dense, softmax) to an output layer
         Parameters
@@ -90,9 +111,10 @@ class Cifar10Trainer(ClassifyTrainer):
         keras.layers.layer
 
         """
-        x = GlobalMaxPooling2D()(output)
-        # x = Flatten()(x)
-        x = Dense(self.num_classes, activation='softmax', name='softmax')(x)
+        # x = GlobalMaxPooling2D()(x)
+        x = Conv2D(self.num_classes, kernel_size=(1, 1), padding='same')(x)
+        x = BilinearUpSampling2D(target_size=self.target_size)(x)
+
         return x
 
     def model_improved(self, model, score):
@@ -132,7 +154,11 @@ class Cifar10Trainer(ClassifyTrainer):
             score of the best model
 
         """
+
         run_meta = tf.RunMetadata()
+        optimizer = Adam(decay=5e-6)
+        loss = softmax_sparse_crossentropy_ignoring_last_label
+        metrics = [sparse_accuracy_ignoring_last_label]
 
         callbacks = []
         if self.learning_rates:
@@ -140,7 +166,14 @@ class Cifar10Trainer(ClassifyTrainer):
             lr_scheduler = LearningRateScheduler(lambda e: self.learning_rates[e // lr_idx])
             callbacks.append(lr_scheduler)
 
-        callbacks.append(EarlyStopping(monitor='val_acc', mode='max', patience=10, min_delta=0.001, verbose=1))
+        callbacks.append(EarlyStopping(monitor='loss', mode='min', patience=50, verbose=1))
+
+
+        steps = self.generator.nb_sample // self.batch_size
+        val_steps = self.val_generator.nb_sample // self.batch_size
+
+        mean = MeanIoUCallback(model, self.val_generator, val_steps, self.num_classes, every_n_epoch=50, on_end=True)
+        callbacks.append(mean)
 
         _ = clone_model(model, input_tensors=tf.placeholder('float32', shape=(1, 32, 32, 3)))
         option_builder = tf.profiler.ProfileOptionBuilder
@@ -166,32 +199,28 @@ class Cifar10Trainer(ClassifyTrainer):
         if params_factor <= 0.0 or flops_factor <= 0.0:
             return self.worst
 
-        #optimizer = SGD(lr=0.1, decay=5e-4, momentum=0.9, nesterov=True)
-        optimizer = Adam(decay=5e-6)
-        metrics = ['accuracy']
-        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=metrics)
-
-        steps = len(self.x_test) // self.batch_size
+        model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         history = model.fit_generator(generator=self.generator, steps_per_epoch=steps, epochs=self.epochs,
-                                      validation_data=(self.x_test, self.y_test), workers=4, verbose=self.verbose,
+                                      workers=4, verbose=self.verbose,
                                       callbacks=callbacks)
 
-        acc = np.max(history.history['val_acc'])
-        loss = np.min(history.history['val_loss'])
+        acc = np.max(history.history['sparse_accuracy_ignoring_last_label'])
+        loss = np.min(history.history['loss'])
+        mean_iou = np.max(mean.mean_ious)
 
-        if np.average(history.history['val_loss']) >= np.log(10):
+        if np.average(history.history['loss']) >= np.log(10):
             return self.worst
 
         # equals triangle cross (a x b * c) between params ,flops and acc vector
         # score = params_factor * flops_factor * acc
 
-        score = params_factor * 0.2 + flops_factor * 0.2 + acc * 0.6
+        score = params_factor * 0.2 + flops_factor * 0.2 + mean_iou * 0.6
 
         # score = (params_factor + flops_factor + acc) / 3.0
 
         print("\n%s" % ("-" * 100))
-        print("acc: %.2f ---> params: %d, %.2f ---> flops: %s, %.2f ---> score: %.2f" %
-              (acc, total_params, params_factor, "{:,}".format(total_flops), flops_factor, score))
+        print("mean_iou: %.2f ---> params: %d, %.2f ---> flops: %s, %.2f ---> score: %.2f" %
+              (mean_iou, total_params, params_factor, "{:,}".format(total_flops), flops_factor, score))
         print("%s\n" % ("-" * 100))
 
         if self.stats_path:
@@ -199,7 +228,7 @@ class Cifar10Trainer(ClassifyTrainer):
                 os.mkdir(self.stats_path)
 
             with open(self._csv_file, 'a') as f:
-                header = [epoch, acc, loss, total_params, total_flops, score]
+                header = [epoch, acc, loss, mean_iou, total_params, total_flops, score]
                 w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
                 w.writerow(header)
 

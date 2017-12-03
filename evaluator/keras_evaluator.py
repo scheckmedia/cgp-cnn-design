@@ -6,17 +6,20 @@ from keras.applications.mobilenet import DepthwiseConv2D
 from keras.models import Model, model_from_json
 import keras.backend as K
 import tensorflow as tf
+from fcn_utils.BilinearUpSampling import BilinearUpSampling2D
 from layers.pad import PadZeros
+from layers.shuffle import ChannelShuffle
 from threading import Lock
 
 class Evaluator:
-    def __init__(self, function_mapping, trainer, add_batch_norm=True, input_shape=(64, 64, 3)):
+    def __init__(self, function_mapping, trainer, add_batch_norm=True, input_shape=(64, 64, 3), can_growth=False):
         self.function_mapping = function_mapping
         self.input_shape = input_shape
         self.trainer = trainer
         self.models = {}
         self.add_batch_norm = add_batch_norm
         self.mutex = Lock()
+        self.can_growth = can_growth
 
     def __call__(self, child, child_number, epoch):
         """
@@ -35,7 +38,12 @@ class Evaluator:
         -------
             score value for a given child
         """
-        with tf.Session(graph=tf.Graph()) as sess:
+
+        config = None
+        if self.can_growth:
+            config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
+
+        with tf.Session(graph=tf.Graph(), config=config) as sess:
             K.set_session(sess)
             model = self.individual_to_keras_model(child, child_number)
 
@@ -154,11 +162,15 @@ class Evaluator:
 
                     if a_channels > b_channels:
                         diff = a_channels - b_channels
-                        x[1] = PadZeros(diff, name='pad_%d' % idx)(x[1])
+                        #x[1] = PadZeros(diff, name='pad_%d' % idx)(x[1])
+                        x[1] = Conv2D(a_channels, kernel_size=1, padding='same', activation='relu',
+                                      use_bias=False, name='pad_%d' % idx)(x[1])
 
                     elif a_channels < b_channels:
                         diff = b_channels - a_channels
-                        x[0] = PadZeros(diff, name='pad_%d' % idx)(x[0])
+                        # x[0] = PadZeros(diff, name='pad_%d' % idx)(x[0])
+                        x[0] = Conv2D(b_channels, kernel_size=1, padding='same', activation='relu',
+                                      use_bias=False, name='pad_%d' % idx)(x[0])
 
                 elif individual.genes[idx].num_inputs == 1:
                     x = nodes[individual.genes[idx].inputs[0]]
@@ -193,7 +205,11 @@ class Evaluator:
             self.mutex.acquire()
             model, weights = self.models[child_number]['model'], self.models[child_number]['weights']
             self.mutex.release()
-            model = model_from_json(model, custom_objects={'PadZeros': PadZeros, 'DepthwiseConv2D': DepthwiseConv2D})
+            model = model_from_json(model, custom_objects={
+                'BilinearUpSampling2D': BilinearUpSampling2D,
+                'PadZeros': PadZeros,
+                'DepthwiseConv2D': DepthwiseConv2D,
+                'ChannelShuffle': ChannelShuffle})
 
             self.trainer.model_improved(model, score)
 

@@ -3,6 +3,7 @@ import os
 import numpy as np
 from .cgp import FunctionGen
 
+
 def plot_graph(individual, filename=None, rankdir='TB'):
     try:
         import pydot
@@ -48,6 +49,7 @@ def plot_graph(individual, filename=None, rankdir='TB'):
         return graph
     except ImportError:
         raise ImportError("pydot not found please install it with pip")
+
 
 def plot_cartesian(individual, filename='grid.png'):
     import pydot
