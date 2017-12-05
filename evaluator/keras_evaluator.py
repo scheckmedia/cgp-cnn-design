@@ -162,15 +162,15 @@ class Evaluator:
 
                     if a_channels > b_channels:
                         diff = a_channels - b_channels
-                        #x[1] = PadZeros(diff, name='pad_%d' % idx)(x[1])
-                        x[1] = Conv2D(a_channels, kernel_size=1, padding='same', activation='relu',
-                                      use_bias=False, name='pad_%d' % idx)(x[1])
+                        x[1] = PadZeros(diff, name='pad_%d' % idx)(x[1])
+                        #x[1] = Conv2D(a_channels, kernel_size=1, padding='same', activation='relu',
+                        #              use_bias=False, name='pad_%d' % idx)(x[1])
 
                     elif a_channels < b_channels:
                         diff = b_channels - a_channels
-                        # x[0] = PadZeros(diff, name='pad_%d' % idx)(x[0])
-                        x[0] = Conv2D(b_channels, kernel_size=1, padding='same', activation='relu',
-                                      use_bias=False, name='pad_%d' % idx)(x[0])
+                        x[0] = PadZeros(diff, name='pad_%d' % idx)(x[0])
+                        #x[0] = Conv2D(b_channels, kernel_size=1, padding='same', activation='relu',
+                        #              use_bias=False, name='pad_%d' % idx)(x[0])
 
                 elif individual.genes[idx].num_inputs == 1:
                     x = nodes[individual.genes[idx].inputs[0]]
