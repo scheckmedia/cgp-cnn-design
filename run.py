@@ -35,7 +35,7 @@ function_mapping = {
 if __name__ == '__main__':
     # trainer = Cifar10Trainer(batch_size=256, epochs=60, verbose=1, lr=[0.001, 0.0005])
     trainer = Voc2012Trainer(voc_root='/mnt/daten/Development/VOCdevkit/VOC2012/',
-                             verbose=1, lr=[0.001, 0.0005, 0.0001, 0.00005])
+                             verbose=1, lr=[0.01, 0.005, 0.001, 0.0005])
     e = Evaluator(function_mapping, trainer, input_shape=trainer.input_shape, can_growth=True)
     functions, inputs = e.get_function_input_list()
     cfg = CgpConfig(rows=6, cols=30, level_back=10, functions=functions, function_inputs=inputs)

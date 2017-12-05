@@ -19,8 +19,8 @@ import csv
 
 
 class Voc2012Trainer(ClassifyTrainer):
-    def __init__(self, input_shape=(160, 160, 3), target_size=(160, 160),
-                 voc_root='', batch_size=16, epochs=100, verbose=0,
+    def __init__(self, input_shape=(64, 64, 3), target_size=(64, 64),
+                 voc_root='', batch_size=16, epochs=200, verbose=0,
                  lr=None, model_path='tmp/', stats_path='tmp/', classes=21):
         """
         A trainer class for VOC2012 dataset
@@ -112,7 +112,7 @@ class Voc2012Trainer(ClassifyTrainer):
 
         """
         # x = GlobalMaxPooling2D()(x)
-        x = Conv2D(self.num_classes, kernel_size=(1, 1), padding='same')(x)
+        x = Conv2D(self.num_classes, kernel_size=(1, 1), use_bias=False, activation='relu', padding='same')(x)
         x = BilinearUpSampling2D(target_size=self.target_size)(x)
 
         return x
@@ -156,7 +156,7 @@ class Voc2012Trainer(ClassifyTrainer):
         """
 
         run_meta = tf.RunMetadata()
-        optimizer = Adam(decay=5e-6)
+        optimizer = SGD(momentum=0.9)
         loss = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
 
@@ -172,7 +172,7 @@ class Voc2012Trainer(ClassifyTrainer):
         steps = self.generator.nb_sample // self.batch_size
         val_steps = self.val_generator.nb_sample // self.batch_size
 
-        mean = MeanIoUCallback(model, self.val_generator, val_steps, self.num_classes, every_n_epoch=50, on_end=True)
+        mean = MeanIoUCallback(model, self.val_generator, val_steps, self.num_classes, every_n_epoch=-1, on_end=True)
         callbacks.append(mean)
 
         _ = clone_model(model, input_tensors=tf.placeholder('float32', shape=(1, 32, 32, 3)))
@@ -190,8 +190,8 @@ class Voc2012Trainer(ClassifyTrainer):
         # it seems that maac in tensorflow is counted as two operations
         # I divide the flops by two to get a nearly similar value
         total_flops, total_params = flops.total_float_ops // 2, params.total_parameters
-        max_params = 4 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
-        max_flops = 14 * 10**6    # max number of flops # e.g. 3858M of ResNet 50
+        max_params = 3 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
+        max_flops = 40 * 10**6    # max number of flops # e.g. 3858M of ResNet 50
 
         params_factor = (1 - (min(max_params, total_params) / max_params))
         flops_factor = (1 - (min(max_flops, total_flops) / max_flops))
