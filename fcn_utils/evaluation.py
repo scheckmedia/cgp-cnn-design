@@ -4,13 +4,10 @@ from PIL import Image
 from multiprocessing import Process, Queue
 
 
-def __confusion_matrix(q, label, preds, label_dir, num_classes, ignore=255):
+def __confusion_matrix(q, label, preds, num_classes, ignore=255):
     conf_m = zeros((num_classes, num_classes), dtype=float)
     for label, pred in zip(label, preds):
-        # img_num = img_num.strip('\n')
         pred = np.argmax(pred, axis=-1).astype(np.uint8)
-        # label = Image.open('%s/%s' % (label_dir, img_num)).resize(pred.shape, Image.BILINEAR)
-        # label = np.array(label).astype(int)
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)
         for p, l in zip(flat_pred, flat_label):
@@ -18,9 +15,6 @@ def __confusion_matrix(q, label, preds, label_dir, num_classes, ignore=255):
                 continue
             if l < num_classes and p < num_classes:
                 conf_m[l, p] += 1
-            else:
-                #print("bla %d %d" %(l, p))
-                continue
 
     q.put(conf_m)
 
@@ -38,11 +32,6 @@ def calculate_iou(model, generator, steps, num_classes, num_workers=6):
         preds += list(y_pred)
         labels += list(y_true)
 
-    # preds = model.predict_generator(generator, steps=steps)
-
-    # label_files = generator.label_files[:len(preds)]
-    # print(len(label_files), len(preds))
-
     q = Queue()
     workers = []
     num_items_per_worker = len(preds) // num_workers
@@ -59,7 +48,7 @@ def calculate_iou(model, generator, steps, num_classes, num_workers=6):
         label = labels[start:end]
         ignore = generator.label_cval
         workers.append(Process(target=__confusion_matrix,
-                               args=(q, label, pred, generator.label_dir, num_classes, ignore)))
+                               args=(q, label, pred, num_classes, ignore)))
 
     for t in workers:
         t.start()
@@ -77,7 +66,6 @@ def calculate_iou(model, generator, steps, num_classes, num_workers=6):
         else:
             conf_matrix = np.add(m, conf_matrix)
 
-    np.save('tmp/conf_matrix', conf_matrix)
     intersection = np.diag(conf_matrix)
     union = np.sum(conf_matrix, axis=0) + np.sum(conf_matrix, axis=1) - intersection
     iou = intersection/union
