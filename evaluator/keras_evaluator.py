@@ -55,11 +55,8 @@ class Evaluator:
 
             score = self.trainer(model, epoch)
 
-            try:
-                self.mutex.acquire()
+            with self.mutex:
                 self.models[child_number] = {'model': model.to_json(), 'weights': model.get_weights()}
-            finally:
-                self.mutex.release()
 
             return score
 
