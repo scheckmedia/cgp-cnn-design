@@ -17,7 +17,6 @@ class ChannelShuffle(Layer):
 
         if self.groups is None:
             if in_channels % self.groups_factor:
-                print(in_channels, self.groups_factor, in_channels % self.groups_factor)
                 raise ValueError("%s %% %s" % (in_channels, self.groups_factor))
 
             self.groups = in_channels // self.groups_factor
