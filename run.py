@@ -4,6 +4,7 @@ from cgp.cgp import CgpConfig, CGP
 from evaluator.keras_evaluator import Evaluator
 from trainer.cifar_trainer import Cifar10Trainer
 from trainer.voc2012_trainer import Voc2012Trainer
+from trainer.cityscapes_trainer import CityscapesTrainer
 from layers.shuffle import ChannelShuffle
 
 import os
@@ -34,10 +35,11 @@ function_mapping = {
 
 if __name__ == '__main__':
     # trainer = Cifar10Trainer(batch_size=256, epochs=60, verbose=1, lr=[0.001, 0.0005])
-    trainer = Voc2012Trainer(voc_root='/mnt/daten/Development/VOCdevkit/VOC2012/',
-                             verbose=1, lr=[0.01, 0.005, 0.001, 0.0005])
+    #trainer = Voc2012Trainer(voc_root='/mnt/daten/Development/VOCdevkit/VOC2012/',
+    #                         verbose=1, lr=[0.01, 0.005, 0.001, 0.0005])
+    trainer = CityscapesTrainer(cs_root='/mnt/daten/Development/Cityscapes', verbose=1, lr=[0.01, 0.005, 0.001, 0.0005])
     e = Evaluator(function_mapping, trainer, input_shape=trainer.input_shape, can_growth=True)
     functions, inputs = e.get_function_input_list()
     cfg = CgpConfig(rows=6, cols=30, level_back=10, functions=functions, function_inputs=inputs)
-    cgp = CGP(cfg, children=1)
+    cgp = CGP(cfg, children=2, parent='tmp/parent.pkl')
     cgp.run(e, max_epochs=200000, save_best='tmp/parent.pkl')
