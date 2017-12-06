@@ -16,6 +16,9 @@ from fcn_utils.loss_function import softmax_sparse_crossentropy_ignoring_last_la
 from fcn_utils.BilinearUpSampling import BilinearUpSampling2D
 import os
 import csv
+from threading import Lock
+
+
 
 
 class Voc2012Trainer(ClassifyTrainer):
@@ -76,6 +79,8 @@ class Voc2012Trainer(ClassifyTrainer):
             target_size=self.target_size, color_mode='rgb',
             batch_size=self.batch_size, shuffle=False
         )
+
+        self.file_lock = Lock()
 
         with open(self._csv_file, 'w') as f:
             header = ['epoch', 'acc', 'loss', 'mean_iou', 'params', 'flops', 'score']
@@ -214,7 +219,7 @@ class Voc2012Trainer(ClassifyTrainer):
         # equals triangle cross (a x b * c) between params ,flops and acc vector
         # score = params_factor * flops_factor * acc
 
-        score = params_factor * 0.2 + flops_factor * 0.2 + mean_iou * 0.6
+        score = params_factor * flops_factor * mean_iou
 
         # score = (params_factor + flops_factor + acc) / 3.0
 
@@ -228,8 +233,10 @@ class Voc2012Trainer(ClassifyTrainer):
                 os.mkdir(self.stats_path)
 
             with open(self._csv_file, 'a') as f:
-                header = [epoch, acc, loss, mean_iou, total_params, total_flops, score]
-                w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
-                w.writerow(header)
+                with self.file_lock:
+                    header = [epoch, acc, loss, mean_iou, total_params, total_flops, score]
+                    w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+                    w.writerow(header)
+
 
         return score
