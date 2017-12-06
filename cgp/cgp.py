@@ -349,7 +349,6 @@ class CGP:
 
             return instance
 
-
     def run(self, evaluator, max_epochs=10, force_mutate=True, save_best=None, verbose=1):
         """
         starts evaluation and searching process for a problem
@@ -382,12 +381,15 @@ class CGP:
         if not callable(evaluator):
             raise TypeError("evaluator must be callable")
 
-        if self.parent is None:
-            self.parent = Individual.spawn(self.config)
 
-        if verbose > 0:
-            print('%s\nevaluate parent\n%s' % ('#' * 100, '#' * 100))
-        self.__evaluator_wrapper(evaluator, self.parent, 0, 0)
+
+        if self.parent is None:
+            if verbose > 0:
+                print('%s\nevaluate parent\n%s' % ('#' * 100, '#' * 100))
+
+            self.parent = Individual.spawn(self.config)
+            self.__evaluator_wrapper(evaluator, self.parent, 0, 0)
+
         current_epoch = 0
 
         threads = [None] * self.num_children
@@ -408,12 +410,12 @@ class CGP:
                 t.start()
 
             for t in threads:
-                t.join()
+                t.join(3600)
 
             for idx, child in enumerate(children):
                 if evaluator.trainer.comp(self.parent.score, child.score):
                     if verbose:
-                        print("child %.2f has a better score than parent %.2f" % (child.score, self.parent.score))
+                        print("child-%d %.2f has a better score than parent %.2f" % (idx, child.score, self.parent.score))
                         print('%s' % ('#' * 100))
 
                     self.parent = child
