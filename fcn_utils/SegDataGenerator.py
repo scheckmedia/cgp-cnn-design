@@ -105,7 +105,7 @@ class SegDirectoryIterator(Iterator):
                  data_format='default', class_mode='sparse',
                  batch_size=1, shuffle=True, seed=None,
                  save_to_dir=None, save_prefix='', save_format='jpeg',
-                 loss_shape=None):
+                 loss_shape=None, mapping=None):
         if data_format == 'default':
             data_format = K.image_data_format()
         self.file_path = file_path
@@ -120,6 +120,8 @@ class SegDirectoryIterator(Iterator):
         self.crop_mode = crop_mode
         self.label_cval = label_cval
         self.pad_size = pad_size
+        self.mapping = mapping
+
         if color_mode not in {'rgb', 'grayscale'}:
             raise ValueError('Invalid color mode:', color_mode,
                              '; expected "rgb" or "grayscale".')
@@ -262,6 +264,11 @@ class SegDirectoryIterator(Iterator):
             if self.loss_shape is not None:
                 y = np.reshape(y, self.loss_shape)
 
+            if self.mapping is not None:
+                 # https://stackoverflow.com/questions/46868855/numpy-replacing-values-in-a-2d-array-efficiently-using-a-dictionary-as-a-map
+                vfnc = np.vectorize(lambda val, dictionary: dictionary[val] if val in dictionary else val)
+                y = vfnc(y, self.mapping)
+
             batch_x[i] = x
             batch_y[i] = y
         # optionally save augmented images to disk for debugging purposes
@@ -354,7 +361,7 @@ class SegDataGenerator(object):
                             class_mode='sparse',
                             batch_size=32, shuffle=True, seed=None,
                             save_to_dir=None, save_prefix='', save_format='jpeg',
-                            loss_shape=None):
+                            loss_shape=None, mapping=None):
         if self.crop_mode == 'random' or self.crop_mode == 'center':
             target_size = self.crop_size
         return SegDirectoryIterator(
@@ -369,7 +376,7 @@ class SegDataGenerator(object):
             batch_size=batch_size, shuffle=shuffle, seed=seed,
             save_to_dir=save_to_dir, save_prefix=save_prefix,
             save_format=save_format,
-            loss_shape=loss_shape)
+            loss_shape=loss_shape, mapping=mapping)
 
     def standardize(self, x):
         if self.rescale:
