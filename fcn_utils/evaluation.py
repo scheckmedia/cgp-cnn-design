@@ -7,7 +7,7 @@ from multiprocessing import Process, Queue
 def __confusion_matrix(q, label, preds, num_classes, ignore=255):
     conf_m = zeros((num_classes, num_classes), dtype=float)
     for label, pred in zip(label, preds):
-        pred = np.argmax(pred, axis=-1).astype(np.uint8)
+        # pred = np.argmax(pred, axis=-1).astype(np.uint8)
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)
         for p, l in zip(flat_pred, flat_label):
@@ -29,6 +29,7 @@ def calculate_iou(model, generator, steps, num_classes, num_workers=6):
     for i in range(steps):
         x, y_true = generator.next()
         y_pred = model.predict(x)
+        y_pred = np.argmax(y_pred, axis=-1).astype(np.uint8)
         preds += list(y_pred)
         labels += list(y_true)
 
