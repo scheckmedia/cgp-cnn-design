@@ -255,6 +255,7 @@ class SegDirectoryIterator(Iterator):
                 else:
                     batch_y = np.zeros((current_batch_size,) + y.shape)
 
+            x = preprocess_input(x)
             x, y = self.seg_data_generator.random_transform(x, y)
             x = self.seg_data_generator.standardize(x)
 
@@ -287,9 +288,8 @@ class SegDirectoryIterator(Iterator):
                 label.save(os.path.join(self.save_to_dir,
                                         'label_' + fname + '.png'))
         # return
-        batch_x = preprocess_input(batch_x)
         if self.class_mode == 'sparse':
-            return batch_x, batch_y
+            return batch_x,  batch_y
         else:
             return batch_x
 
