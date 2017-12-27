@@ -45,20 +45,26 @@ class Evaluator:
 
         with tf.Session(graph=tf.Graph(), config=config) as sess:
             K.set_session(sess)
-            model = self.individual_to_keras_model(child, child_number)
 
-            # model is too complex or invalid so we skip it and
-            # assign a high value that ensures this child is worst child ever
-            if model is None:
-                warnings.warn('skip model cause it is invalid')
+            try:
+                model = self.individual_to_keras_model(child, child_number)
+                if model is None:
+                    child.mutate()
+                    return self(child, child_number, epoch)
+
+                score = self.trainer(model, epoch)
+
+                if score is None:
+                    child.mutate()
+                    return self(child, child_number, epoch)
+
+                with self.mutex:
+                    self.models[child_number] = {'model': model.to_json(), 'weights': model.get_weights()}
+
+                return score
+            except Exception as ex:
+                print("exception", ex)
                 return self.trainer.worst
-
-            score = self.trainer(model, epoch)
-
-            with self.mutex:
-                self.models[child_number] = {'model': model.to_json(), 'weights': model.get_weights()}
-
-            return score
 
     def get_function_input_list(self):
         """
@@ -161,13 +167,12 @@ class Evaluator:
                         diff = a_channels - b_channels
                         x[1] = PadZeros(diff, name='pad_%d' % idx)(x[1])
                         #x[1] = Conv2D(a_channels, kernel_size=1, padding='same', activation='relu',
-                        #              use_bias=False, name='pad_%d' % idx)(x[1])
-
+                        #              kernel_initializer='he_uniform', name='pad_%d' % idx)(x[1])
                     elif a_channels < b_channels:
                         diff = b_channels - a_channels
                         x[0] = PadZeros(diff, name='pad_%d' % idx)(x[0])
                         #x[0] = Conv2D(b_channels, kernel_size=1, padding='same', activation='relu',
-                        #              use_bias=False, name='pad_%d' % idx)(x[0])
+                        #              kernel_initializer='he_uniform', name='pad_%d' % idx)(x[0])
 
                 elif individual.genes[idx].num_inputs == 1:
                     x = nodes[individual.genes[idx].inputs[0]]
