@@ -2,23 +2,42 @@ import keras.backend as K
 import tensorflow as tf
 
 
-def sparse_accuracy_ignoring_last_label(y_true, y_pred):
-    nb_classes = K.int_shape(y_pred)[-1]
-    y_pred = K.reshape(y_pred, (-1, nb_classes))
+# def sparse_accuracy_ignoring_last_label(y_true, y_pred):
+#     nb_classes = K.int_shape(y_pred)[-1]
+#     y_pred = K.reshape(y_pred, (-1, nb_classes))
+#
+#     y_true = K.one_hot(tf.to_int32(K.flatten(y_true)),
+#                        nb_classes + 1)
+#     unpacked = tf.unstack(y_true, axis=-1)
+#     legal_labels = ~tf.cast(unpacked[-1], tf.bool)
+#     y_true = tf.stack(unpacked[:-1], axis=-1)
+#
+#     return K.sum(tf.to_float(legal_labels & K.equal(K.argmax(y_true, axis=-1), K.argmax(y_pred, axis=-1)))) / K.sum(tf.to_float(legal_labels))
 
-    y_true = K.one_hot(tf.to_int32(K.flatten(y_true)),
-                       nb_classes + 1)
+
+def sparse_accuracy_ignoring_last_label(y_true, y_pred):
+    y_pred = K.reshape(y_pred, (-1, K.int_shape(y_pred)[-1]))
+    y_true = K.one_hot(tf.to_int32(K.flatten(y_true)), K.int_shape(y_pred)[-1]+1)
     unpacked = tf.unstack(y_true, axis=-1)
-    legal_labels = ~tf.cast(unpacked[-1], tf.bool)
     y_true = tf.stack(unpacked[:-1], axis=-1)
 
-    return K.sum(tf.to_float(legal_labels & K.equal(K.argmax(y_true, axis=-1), K.argmax(y_pred, axis=-1)))) / K.sum(tf.to_float(legal_labels))
-
+    return K.cast(K.equal(K.argmax(y_true, axis=-1),
+                          K.argmax(y_pred, axis=-1)),
+                  K.floatx())
 
 def iou(y_true, y_pred):
+    # horrible slow
+
     num_classes = K.int_shape(y_pred)[-1]
     print("shapes:", K.int_shape(y_true), K.int_shape(y_pred))
+
+    y_pred = K.reshape(y_pred, (-1, K.int_shape(y_pred)[-1]))
+    y_true = K.one_hot(tf.to_int32(K.flatten(y_true)), K.int_shape(y_pred)[-1] + 1)
+    unpacked = tf.unstack(y_true, axis=-1)
+    y_true = tf.stack(unpacked[:-1], axis=-1)
+
     score, up_opt = tf.metrics.mean_iou(y_true, y_pred, num_classes)
+    K.get_session().run(tf.local_variables_initializer())
     with tf.control_dependencies([up_opt]):
         score = tf.identity(score)
     return score

@@ -34,8 +34,10 @@ def _get_labels():
             labels = yaml.load(f)
             return Label.from_list(labels['labels'])
 
+
 def label_mapping():
     return {label.id: label.trainId for label in _get_labels()}
+
 
 def label_names(attribute='trainId'):
     labels = _get_labels()
