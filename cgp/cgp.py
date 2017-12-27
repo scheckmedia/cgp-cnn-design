@@ -381,8 +381,6 @@ class CGP:
         if not callable(evaluator):
             raise TypeError("evaluator must be callable")
 
-
-
         if self.parent is None:
             if verbose > 0:
                 print('%s\nevaluate parent\n%s' % ('#' * 100, '#' * 100))
@@ -410,7 +408,7 @@ class CGP:
                 t.start()
 
             for t in threads:
-                t.join(3600)
+                t.join()
 
             for idx, child in enumerate(children):
                 if evaluator.trainer.comp(self.parent.score, child.score):
