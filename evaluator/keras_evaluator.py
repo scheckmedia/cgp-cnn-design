@@ -8,7 +8,7 @@ import keras.backend as K
 import tensorflow as tf
 from fcn_utils.BilinearUpSampling import BilinearUpSampling2D
 from layers.pad import PadZeros
-from layers.shuffle import ChannelShuffle
+from layers.shuffle import ChannelShuffle, SliceLayer
 from threading import Lock
 
 class Evaluator:
@@ -210,6 +210,7 @@ class Evaluator:
             model = model_from_json(model, custom_objects={
                 'BilinearUpSampling2D': BilinearUpSampling2D,
                 'PadZeros': PadZeros,
+                'SliceLayer': SliceLayer,
                 'DepthwiseConv2D': DepthwiseConv2D,
                 'ChannelShuffle': ChannelShuffle})
 
