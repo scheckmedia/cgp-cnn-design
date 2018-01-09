@@ -117,7 +117,7 @@ class Cifar10Trainer(ClassifyTrainer):
                    to_file=os.path.join(self.model_path, 'model_%s_score_%.3f.png' % (model.name, score)))
         print("save model %s with score %.5f to file" % (f, score))
 
-    def __call__(self, model, epoch):
+    def __call__(self, model, epoch, initial_epoch=0):
         """
         starts the training of a keras model
 

@@ -62,7 +62,7 @@ class ClassifyTrainer:
     def model_improved(self, model, score):
         pass
 
-    def __call__(self, model, epoch):
+    def __call__(self, model, epoch, initial_epoch=0, callbacks=None, skip_checks=False):
         """
         starts the training of a keras model
 
@@ -70,6 +70,12 @@ class ClassifyTrainer:
         ----------
         model: keras.models.Model
             a keras model which will be trained
+        epoch: int
+            cgp epoch - just for the csv logging not necessary for plain training
+        callbacks: list(keras.callbacks)
+            a list of keras callbacks
+        skip_checks:
+            deactivates some checks which are required in cgp search mode e.g. if the flops are to high
 
         Returns
         -------
