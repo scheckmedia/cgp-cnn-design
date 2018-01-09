@@ -22,8 +22,8 @@ from threading import Lock
 
 
 class Voc2012Trainer(ClassifyTrainer):
-    def __init__(self, input_shape=(64, 64, 3), target_size=(64, 64),
-                 voc_root='', batch_size=16, epochs=200, verbose=0,
+    def __init__(self, input_shape=(128, 128, 3), target_size=(128, 128),
+                 voc_root='', batch_size=32, epochs=50, verbose=0,
                  lr=None, model_path='tmp/', stats_path='tmp/', classes=21):
         """
         A trainer class for VOC2012 dataset
@@ -144,7 +144,7 @@ class Voc2012Trainer(ClassifyTrainer):
                    to_file=os.path.join(self.model_path, 'model_%s_score_%.3f.png' % (model.name, score)))
         print("save model %s with score %.5f to file" % (f, score))
 
-    def __call__(self, model, epoch):
+    def __call__(self, model, epoch, callbacks=None):
         """
         starts the training of a keras model
 
@@ -161,7 +161,7 @@ class Voc2012Trainer(ClassifyTrainer):
         """
 
         run_meta = tf.RunMetadata()
-        optimizer = SGD(momentum=0.9)
+        optimizer = Adam(decay=1e-6)
         loss = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
 
@@ -180,7 +180,7 @@ class Voc2012Trainer(ClassifyTrainer):
         mean = MeanIoUCallback(model, self.val_generator, val_steps, self.num_classes, every_n_epoch=-1, on_end=True)
         callbacks.append(mean)
 
-        _ = clone_model(model, input_tensors=tf.placeholder('float32', shape=(1, 32, 32, 3)))
+        _ = clone_model(model, input_tensors=tf.placeholder('float32', shape=(1,) + self.input_shape))
         option_builder = tf.profiler.ProfileOptionBuilder
         profiler = tf.profiler.profile
 
