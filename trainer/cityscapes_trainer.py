@@ -16,20 +16,21 @@ from fcn_utils.loss_function import softmax_sparse_crossentropy_ignoring_last_la
 from fcn_utils.BilinearUpSampling import BilinearUpSampling2D
 import os
 import csv
+from warnings import warn
 from threading import Lock
 
 class CityscapesTrainer(ClassifyTrainer):
-    def __init__(self, input_shape=(128, 64, 3), target_size=(128, 64),
-                 cs_root='', image_folder='leftImg8bit', gt_folder='gtFine',
-                 batch_size=16, epochs=20, verbose=0,
+    def __init__(self, input_shape=(128, 256, 3), target_size=(128, 256),
+                 cs_root='', image_folder='leftImg8bit', gt_folder='gtCoarse',
+                 batch_size=8, epochs=30, verbose=0,
                  lr=None, model_path='tmp/cityscapes', stats_path='tmp/cityscapes', classes=19):
         """
-        A trainer class for VOC2012 dataset
+        A trainer class for Cityscapes dataset
 
         Parameters
         ----------
         batch_size: int(32)
-            batch_size for cifar10 dataset
+            batch_size for Cityscapes dataset
         epochs: int(100)
             number of epochs are used for each training process*
         verbose: int(1)ping server
@@ -40,7 +41,7 @@ class CityscapesTrainer(ClassifyTrainer):
         ClassifyTrainer.__init__(self, batch_size=batch_size, num_classes=classes, input_shape=input_shape,
                                  epochs=epochs, verbose=verbose)
 
-        self.file_path = os.path.join(cs_root, image_folder, 'train.txt')
+        self.file_path = os.path.join(cs_root, image_folder, 'train_extra.txt')
         self.val_file_path = os.path.join(cs_root, image_folder, 'val.txt')
         self.data_dir = os.path.join(cs_root, image_folder)
         self.label_dir = os.path.join(cs_root, gt_folder)
@@ -52,8 +53,10 @@ class CityscapesTrainer(ClassifyTrainer):
         self._csv_file = os.path.join(self.stats_path, 'stats.csv')
         self.learning_rates = lr
 
-
         self.train_datagen = SegDataGenerator(
+                                         rescale=1.0/255.0,
+                                         width_shift_range=0.05,
+                                         height_shift_range=0.05,
                                          horizontal_flip=True,
                                          fill_mode='constant',
                                          label_cval=255)
@@ -70,7 +73,7 @@ class CityscapesTrainer(ClassifyTrainer):
             ignore_label=255, mapping=mapping
             # save_to_dir='Images/'
         )
-        self.val_generator = SegDataGenerator().flow_from_directory(
+        self.val_generator = SegDataGenerator(rescale=1.0/255.0).flow_from_directory(
             file_path=self.val_file_path,
             data_dir=self.data_dir, data_suffix=self.data_suffix,
             label_dir=self.label_dir, label_suffix=self.label_suffix,
@@ -115,8 +118,7 @@ class CityscapesTrainer(ClassifyTrainer):
         keras.layers.layer
 
         """
-        # x = GlobalMaxPooling2D()(x)
-        x = Conv2D(self.num_classes, kernel_size=(1, 1), use_bias=False, activation='relu', padding='same')(x)
+        x = Conv2D(self.num_classes, kernel_size=(1, 1), activation='relu', padding='same')(x)
         x = BilinearUpSampling2D(target_size=self.target_size)(x)
 
         return x
@@ -143,7 +145,7 @@ class CityscapesTrainer(ClassifyTrainer):
                    to_file=os.path.join(self.model_path, 'model_%s_score_%.3f.png' % (model.name, score)))
         print("save model %s with score %.5f to file" % (f, score))
 
-    def __call__(self, model, epoch):
+    def __call__(self, model, epoch, initial_epoch=0, callbacks=None, every_n_epoch=10, skip_checks=False):
         """
         starts the training of a keras model
 
@@ -151,6 +153,14 @@ class CityscapesTrainer(ClassifyTrainer):
         ----------
         model: keras.models.Model
             a keras model which will be trained
+        epoch: int
+            cgp epoch - just for the csv logging not necessary for plain training
+        callbacks: list(keras.callbacks)
+            a list of keras callbacks
+        every_n_epoch:
+            sets the epochs where the mean iou is calculated
+        skip_checks:
+            deactivates some checks which are required in cgp search mode e.g. if the flops are to high
 
         Returns
         -------
@@ -164,22 +174,25 @@ class CityscapesTrainer(ClassifyTrainer):
         loss = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
 
-        callbacks = []
+        if callbacks is None or not isinstance(callbacks, list):
+            callbacks = []
+
         if self.learning_rates:
             lr_idx = (self.epochs // len(self.learning_rates))
             lr_scheduler = LearningRateScheduler(lambda e: self.learning_rates[e // lr_idx])
             callbacks.append(lr_scheduler)
 
-        callbacks.append(EarlyStopping(monitor='loss', mode='min', patience=50, verbose=1))
+        callbacks.append(EarlyStopping(monitor='sparse_accuracy_ignoring_last_label', mode='max', min_delta=0.0005, patience=5, verbose=1))
 
         steps = self.generator.nb_sample // self.batch_size
         val_steps = self.val_generator.nb_sample // self.batch_size
 
-        mean = MeanIoUCallback(model, self.val_generator, val_steps, self.num_classes, every_n_epoch=-1,
+        mean = MeanIoUCallback(model, self.val_generator, val_steps, self.num_classes,
+                               every_n_epoch=every_n_epoch,
                                on_end=True, save_path=self.stats_path)
         callbacks.append(mean)
 
-        _ = clone_model(model, input_tensors=tf.placeholder('float32', shape=(1, 32, 32, 3)))
+        _ = clone_model(model, input_tensors=tf.placeholder('float32', shape=(1,) + self.input_shape))
         option_builder = tf.profiler.ProfileOptionBuilder
         profiler = tf.profiler.profile
 
@@ -194,31 +207,35 @@ class CityscapesTrainer(ClassifyTrainer):
         # it seems that maac in tensorflow is counted as two operations
         # I divide the flops by two to get a nearly similar value
         total_flops, total_params = flops.total_float_ops // 2, params.total_parameters
-        max_params = 3 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
-        max_flops = 40 * 10**6    # max number of flops # e.g. 3858M of ResNet 50
+        max_params = 4 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
+        max_flops = 400 * 10**6    # max number of flops # e.g. 3858M of ResNet 50
 
         params_factor = (1 - (min(max_params, total_params) / max_params))
         flops_factor = (1 - (min(max_flops, total_flops) / max_flops))
 
-        if params_factor <= 0.0 or flops_factor <= 0.0:
-            return self.worst
+        if not skip_checks and (params_factor <= 0.0 or flops_factor <= 0.0):
+            warn('score is too bad. params_factor: %.2f -- flops_factor: %.2f --- %.2f' %(params_factor, flops_factor, total_flops))
+            return None
+
+        model.summary(line_length=150)
+        print('params_factor: %.2f -- flops_factor: %.2f --- %.2f' %(params_factor, flops_factor, total_flops))
 
         model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         history = model.fit_generator(generator=self.generator, steps_per_epoch=steps, epochs=self.epochs,
-                                      workers=6, verbose=self.verbose,
-                                      callbacks=callbacks, use_multiprocessing=True)
+                                      workers=6, verbose=self.verbose, initial_epoch=initial_epoch,
+                                      callbacks=callbacks, use_multiprocessing=False)
 
         acc = np.max(history.history['sparse_accuracy_ignoring_last_label'])
         loss = np.min(history.history['loss'])
         mean_iou = np.max(mean.mean_ious)
 
-        if np.average(history.history['loss']) >= np.log(10):
+        if not skip_checks and np.average(history.history['loss']) >= np.log(10):
             return self.worst
 
         # equals triangle cross (a x b * c) between params ,flops and acc vector
         # score = params_factor * flops_factor * acc
 
-        score = params_factor * flops_factor * mean_iou
+        score = params_factor * 0.1 + flops_factor * 0.1 + mean_iou * 0.8
 
         # score = (params_factor + flops_factor + acc) / 3.0
 
