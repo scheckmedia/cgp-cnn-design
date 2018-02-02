@@ -12,7 +12,25 @@ from layers.shuffle import ChannelShuffle, SliceLayer
 from threading import Lock
 
 class Evaluator:
+    """
+    Class responsible for converting an Individual into a Keras Model and the evaluation
+    """
+
     def __init__(self, function_mapping, trainer, add_batch_norm=True, input_shape=(64, 64, 3), can_growth=False):
+        """
+        Parameters
+        ----------
+        function_mapping: dict
+            a dict containg functions and the corresponding inputs
+        trainer: ClassifyTrainer
+            a trainer which will be called after the conversion into an keras model is done
+        add_batch_norm: bool(True)
+            if true every conv layer follows a batch norm and a relu activation layer
+        input_shape: tuple(64,64,3)
+            input shape
+        can_growth: bool(False)
+             if true tensorflow allocate only as much GPU memory based on runtime allocations
+        """
         self.function_mapping = function_mapping
         self.input_shape = input_shape
         self.trainer = trainer
@@ -202,6 +220,20 @@ class Evaluator:
             return None
 
     def improved(self, child_number, score):
+        """
+        function is called if the cgp evolution strategy finds a better individual
+
+        Parameters
+        ----------
+        child_number: int
+            child index
+        score: float
+            score of the better individual
+
+        Returns
+        -------
+
+        """
         with tf.Session(graph=tf.Graph()) as sess:
             K.set_session(sess)
             self.mutex.acquire()
