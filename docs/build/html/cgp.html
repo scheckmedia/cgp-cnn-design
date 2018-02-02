@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cgp package &mdash; cgp_ann_design 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="cgp_ann_design 1.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> cgp_ann_design
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">cgp package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-cgp.cgp">cgp.cgp module</a></li>
+<li><a class="reference internal" href="#module-cgp.utils">cgp.utils module</a></li>
+<li><a class="reference internal" href="#module-cgp">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cgp_ann_design</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>cgp package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/cgp.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cgp-package">
+<h1>cgp package<a class="headerlink" href="#cgp-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-cgp.cgp">
+<span id="cgp-cgp-module"></span><h2>cgp.cgp module<a class="headerlink" href="#module-cgp.cgp" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cgp.cgp.CGP">
+<em class="property">class </em><code class="descclassname">cgp.cgp.</code><code class="descname">CGP</code><span class="sig-paren">(</span><em>config</em>, <em>children=2</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#CGP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.CGP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>apply Cartesian Genetic Programming to your problem</p>
+<dl class="method">
+<dt id="cgp.cgp.CGP.load_parent">
+<code class="descname">load_parent</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#CGP.load_parent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.CGP.load_parent" title="Permalink to this definition">¶</a></dt>
+<dd><p>loads an individual form which the evolution starts</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – path to the file which will be loaded</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">loaded instance of an Individual</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#cgp.cgp.Individual" title="cgp.cgp.Individual">Individual</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgp.cgp.CGP.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>evaluator</em>, <em>max_epochs=10</em>, <em>force_mutate=True</em>, <em>save_best=None</em>, <em>verbose=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#CGP.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.CGP.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>starts evaluation and searching process for a problem</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>evaluator</strong> (<em>function</em><em>(</em><em>child</em><em>, </em><em>child_index</em><em>)</em>) – function that will be called for each individual to rate it
+arguments are individual and an index
+the function must return the score of an passed individual</li>
+<li><strong>max_epochs</strong> (<em>int</em><em>(</em><em>10</em><em>)</em>) – max number of iterations to search for the best individual</li>
+<li><strong>force_mutate</strong> (<em>bool</em><em>(</em><em>true</em><em>)</em>) – forces to mutate. if true and nothing changed it tries to mutate until something changed</li>
+<li><strong>save_best</strong> (<em>str</em><em>(</em><em>None</em><em>)</em>) – if save_best is an path, the best child will be saved to it</li>
+<li><strong>verbose</strong> (<em>int</em><em>(</em><em>1</em><em>)</em>) – if 1 then a message will be printed after an evaluation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cgp.cgp.CgpConfig">
+<em class="property">class </em><code class="descclassname">cgp.cgp.</code><code class="descname">CgpConfig</code><span class="sig-paren">(</span><em>rows=5</em>, <em>cols=10</em>, <em>level_back=5</em>, <em>functions=[]</em>, <em>function_inputs=[]</em>, <em>constraints=None</em>, <em>mutation_rate=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#CgpConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.CgpConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>configuration for a CGP problem</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cgp.cgp.FunctionGen">
+<em class="property">class </em><code class="descclassname">cgp.cgp.</code><code class="descname">FunctionGen</code><span class="sig-paren">(</span><em>fnc_idx</em>, <em>max_inputs</em>, <em>num_inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#FunctionGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.FunctionGen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cgp.cgp.Gen" title="cgp.cgp.Gen"><code class="xref py py-class docutils literal"><span class="pre">cgp.cgp.Gen</span></code></a></p>
+<p>Representation of a node containing a function gen</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cgp.cgp.Gen">
+<em class="property">class </em><code class="descclassname">cgp.cgp.</code><code class="descname">Gen</code><span class="sig-paren">(</span><em>max_inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Gen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Base Class for Gen</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="cgp.cgp.Individual">
+<em class="property">class </em><code class="descclassname">cgp.cgp.</code><code class="descname">Individual</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>individual class containing genes which can be mutated
+basically in a evolution strategy it is called a parent and/or child</p>
+<dl class="method">
+<dt id="cgp.cgp.Individual.active_net">
+<code class="descname">active_net</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.active_net"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.active_net" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a decoded net structure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgp.cgp.Individual.check_active">
+<code class="descname">check_active</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.check_active"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.check_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>checks which node in the cartesian grid is active</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgp.cgp.Individual.clone">
+<code class="descname">clone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.clone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.clone" title="Permalink to this definition">¶</a></dt>
+<dd><p>clones an individual</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgp.cgp.Individual.init_genes">
+<code class="descname">init_genes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.init_genes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.init_genes" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates random gene connections in the configured cartesian grid</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgp.cgp.Individual.is_spawned">
+<code class="descname">is_spawned</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.is_spawned"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.is_spawned" title="Permalink to this definition">¶</a></dt>
+<dd><p>checks whether a individual contains genes
+:returns: True if an individual contains genes
+:rtype: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgp.cgp.Individual.mutate">
+<code class="descname">mutate</code><span class="sig-paren">(</span><em>force=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.mutate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.mutate" title="Permalink to this definition">¶</a></dt>
+<dd><p>mutates an individual based on the configured mutation rate</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force</strong> (<em>bool</em><em>(</em><em>True</em><em>)</em>) – forces to mutate. if nothing changed it tries to mutate until something changed</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cgp.cgp.Individual.num_active_nodes">
+<code class="descname">num_active_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.num_active_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.num_active_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>counts number of active genes in the cartesian grid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="cgp.cgp.Individual.spawn">
+<em class="property">classmethod </em><code class="descname">spawn</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#Individual.spawn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.Individual.spawn" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates an instance of an individual and generates random gene connections</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>config</strong> (<a class="reference internal" href="#cgp.cgp.CgpConfig" title="cgp.cgp.CgpConfig"><em>CgpConfig</em></a>) – CGP configuration</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">an individual with random gene connections</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cgp.cgp.OutputGen">
+<em class="property">class </em><code class="descclassname">cgp.cgp.</code><code class="descname">OutputGen</code><span class="sig-paren">(</span><em>max_inputs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/cgp.html#OutputGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.cgp.OutputGen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cgp.cgp.Gen" title="cgp.cgp.Gen"><code class="xref py py-class docutils literal"><span class="pre">cgp.cgp.Gen</span></code></a></p>
+<p>Representation of node which is an output gen</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cgp.utils">
+<span id="cgp-utils-module"></span><h2>cgp.utils module<a class="headerlink" href="#module-cgp.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="cgp.utils.plot_cartesian">
+<code class="descclassname">cgp.utils.</code><code class="descname">plot_cartesian</code><span class="sig-paren">(</span><em>individual</em>, <em>filename='grid.png'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/utils.html#plot_cartesian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.utils.plot_cartesian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cgp.utils.plot_graph">
+<code class="descclassname">cgp.utils.</code><code class="descname">plot_graph</code><span class="sig-paren">(</span><em>individual</em>, <em>filename=None</em>, <em>rankdir='TB'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cgp/utils.html#plot_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cgp.utils.plot_graph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-cgp">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cgp" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Tobias Scheck.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

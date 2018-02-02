@@ -1,0 +1,464 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>trainer.voc2012_trainer &mdash; cgp_ann_design 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="cgp_ann_design 1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> cgp_ann_design
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">cgp_ann_design</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>trainer.voc2012_trainer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for trainer.voc2012_trainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">keras.backend</span> <span class="k">as</span> <span class="nn">K</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">clone_model</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="k">import</span> <span class="n">to_categorical</span><span class="p">,</span> <span class="n">plot_model</span>
+<span class="kn">from</span> <span class="nn">keras.optimizers</span> <span class="k">import</span> <span class="n">SGD</span><span class="p">,</span> <span class="n">Adam</span>
+<span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="k">import</span> <span class="n">LearningRateScheduler</span><span class="p">,</span> <span class="n">EarlyStopping</span><span class="p">,</span> <span class="n">LambdaCallback</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">Activation</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">from</span> <span class="nn">trainer.trainer</span> <span class="k">import</span> <span class="n">ClassifyTrainer</span>
+<span class="kn">from</span> <span class="nn">fcn_utils.activations</span> <span class="k">import</span> <span class="n">softmax_4d</span>
+<span class="kn">from</span> <span class="nn">fcn_utils.callbacks</span> <span class="k">import</span> <span class="n">MeanIoUCallback</span>
+<span class="kn">from</span> <span class="nn">fcn_utils.SegDataGenerator</span> <span class="k">import</span> <span class="n">SegDataGenerator</span>
+<span class="kn">from</span> <span class="nn">fcn_utils.metrics</span> <span class="k">import</span> <span class="n">sparse_accuracy_ignoring_last_label</span><span class="p">,</span> <span class="n">iou</span>
+<span class="kn">from</span> <span class="nn">fcn_utils.loss_function</span> <span class="k">import</span> <span class="n">softmax_sparse_crossentropy_ignoring_last_label</span>
+<span class="kn">from</span> <span class="nn">fcn_utils.BilinearUpSampling</span> <span class="k">import</span> <span class="n">BilinearUpSampling2D</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Lock</span>
+
+
+
+
+<div class="viewcode-block" id="Voc2012Trainer"><a class="viewcode-back" href="../../trainer.html#trainer.voc2012_trainer.Voc2012Trainer">[docs]</a><span class="k">class</span> <span class="nc">Voc2012Trainer</span><span class="p">(</span><span class="n">ClassifyTrainer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A trainer class for VOC2012 dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">target_size</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span>
+                 <span class="n">voc_root</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_path</span><span class="o">=</span><span class="s1">&#39;tmp/&#39;</span><span class="p">,</span> <span class="n">stats_path</span><span class="o">=</span><span class="s1">&#39;tmp/&#39;</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="mi">21</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        batch_size: int(32)</span>
+<span class="sd">            batch_size for cifar10 dataset</span>
+<span class="sd">        epochs: int(100)</span>
+<span class="sd">            number of epochs are used for each training process*</span>
+<span class="sd">        verbose: int(1)ping server</span>
+
+<span class="sd">            see keras.model.fit_generator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ClassifyTrainer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">classes</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span>
+                                 <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="s1">&#39;ImageSets&#39;</span><span class="p">,</span> <span class="s1">&#39;Segmentation&#39;</span><span class="p">,</span> <span class="s1">&#39;train.txt&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="s1">&#39;ImageSets&#39;</span><span class="p">,</span> <span class="s1">&#39;Segmentation&#39;</span><span class="p">,</span> <span class="s1">&#39;val.txt&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="s1">&#39;JPEGImages&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="s1">&#39;SegmentationClass&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_suffix</span> <span class="o">=</span> <span class="s1">&#39;.jpg&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_suffix</span> <span class="o">=</span> <span class="s1">&#39;.png&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_size</span> <span class="o">=</span> <span class="n">target_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_path</span> <span class="o">=</span> <span class="n">model_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats_path</span> <span class="o">=</span> <span class="n">stats_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_csv_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats_path</span><span class="p">,</span> <span class="s1">&#39;stats.csv&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learning_rates</span> <span class="o">=</span> <span class="n">lr</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_datagen</span> <span class="o">=</span> <span class="n">SegDataGenerator</span><span class="p">(</span>
+                                         <span class="n">horizontal_flip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                         <span class="n">fill_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+                                         <span class="n">label_cval</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_datagen</span><span class="o">.</span><span class="n">flow_from_directory</span><span class="p">(</span>
+            <span class="n">file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span>
+            <span class="n">data_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">data_suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_suffix</span><span class="p">,</span>
+            <span class="n">label_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_dir</span><span class="p">,</span> <span class="n">label_suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_suffix</span><span class="p">,</span>
+            <span class="n">classes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span>
+            <span class="n">target_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_size</span><span class="p">,</span> <span class="n">color_mode</span><span class="o">=</span><span class="s1">&#39;rgb&#39;</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">loss_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">ignore_label</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span>
+            <span class="c1"># save_to_dir=&#39;Images/&#39;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_generator</span> <span class="o">=</span> <span class="n">SegDataGenerator</span><span class="p">()</span><span class="o">.</span><span class="n">flow_from_directory</span><span class="p">(</span>
+            <span class="n">file_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">val_file_path</span><span class="p">,</span>
+            <span class="n">data_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">data_suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_suffix</span><span class="p">,</span>
+            <span class="n">label_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_dir</span><span class="p">,</span> <span class="n">label_suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_suffix</span><span class="p">,</span>
+            <span class="n">classes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span>
+            <span class="n">target_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_size</span><span class="p">,</span> <span class="n">color_mode</span><span class="o">=</span><span class="s1">&#39;rgb&#39;</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="s1">&#39;acc&#39;</span><span class="p">,</span> <span class="s1">&#39;loss&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_iou&#39;</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">,</span> <span class="s1">&#39;flops&#39;</span><span class="p">,</span> <span class="s1">&#39;score&#39;</span><span class="p">]</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">quoting</span><span class="o">=</span><span class="n">csv</span><span class="o">.</span><span class="n">QUOTE_MINIMAL</span><span class="p">)</span>
+            <span class="n">w</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Voc2012Trainer.comp"><a class="viewcode-back" href="../../trainer.html#trainer.voc2012_trainer.Voc2012Trainer.comp">[docs]</a>    <span class="k">def</span> <span class="nf">comp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        compares a parent and a child and decides whether a child is beter than a parent</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        parent: float</span>
+<span class="sd">            parent score</span>
+<span class="sd">        child: float</span>
+<span class="sd">            child score</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            True if a child is better than a parent otherwise False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">lt</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Voc2012Trainer.append_output_layer"><a class="viewcode-back" href="../../trainer.html#trainer.voc2012_trainer.Voc2012Trainer.append_output_layer">[docs]</a>    <span class="k">def</span> <span class="nf">append_output_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        appends the last layer (dense, softmax) to an output layer</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        output: keras.layers.layer</span>
+<span class="sd">            layer where additional layer should be connected</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        keras.layers.layer</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># x = GlobalMaxPooling2D()(x)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Conv2D</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">use_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">BilinearUpSampling2D</span><span class="p">(</span><span class="n">target_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_size</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="Voc2012Trainer.model_improved"><a class="viewcode-back" href="../../trainer.html#trainer.voc2012_trainer.Voc2012Trainer.model_improved">[docs]</a>    <span class="k">def</span> <span class="nf">model_improved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">score</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model: keras.models.Model</span>
+<span class="sd">            model which has the best score for a CGP iteration</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">base_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">base_path</span><span class="p">)</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_path</span><span class="p">,</span> <span class="s1">&#39;model_</span><span class="si">%s</span><span class="s1">_score_</span><span class="si">%.3f</span><span class="s1">.hdf5&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">score</span><span class="p">))</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">plot_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">show_shapes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">to_file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_path</span><span class="p">,</span> <span class="s1">&#39;model_</span><span class="si">%s</span><span class="s1">_score_</span><span class="si">%.3f</span><span class="s1">.png&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">score</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;save model </span><span class="si">%s</span><span class="s2"> with score </span><span class="si">%.5f</span><span class="s2"> to file&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">score</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        starts the training of a keras model</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model: keras.models.Model</span>
+<span class="sd">            a keras model which will be trained</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            score of the best model</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">run_meta</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">RunMetadata</span><span class="p">()</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(</span><span class="n">decay</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">softmax_sparse_crossentropy_ignoring_last_label</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">sparse_accuracy_ignoring_last_label</span><span class="p">]</span>
+
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">learning_rates</span><span class="p">:</span>
+            <span class="n">lr_idx</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">//</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">learning_rates</span><span class="p">))</span>
+            <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">LearningRateScheduler</span><span class="p">(</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">learning_rates</span><span class="p">[</span><span class="n">e</span> <span class="o">//</span> <span class="n">lr_idx</span><span class="p">])</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lr_scheduler</span><span class="p">)</span>
+
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EarlyStopping</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;loss&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+
+        <span class="n">steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="o">.</span><span class="n">nb_sample</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+        <span class="n">val_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_generator</span><span class="o">.</span><span class="n">nb_sample</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
+
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">MeanIoUCallback</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_generator</span><span class="p">,</span> <span class="n">val_steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">every_n_epoch</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_end</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+
+        <span class="n">_</span> <span class="o">=</span> <span class="n">clone_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_tensors</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_shape</span><span class="p">))</span>
+        <span class="n">option_builder</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">ProfileOptionBuilder</span>
+        <span class="n">profiler</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">profiler</span><span class="o">.</span><span class="n">profile</span>
+
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">option_builder</span><span class="o">.</span><span class="n">float_operation</span><span class="p">()</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span>
+        <span class="n">flops</span> <span class="o">=</span> <span class="n">profiler</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">run_meta</span><span class="o">=</span><span class="n">run_meta</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">option_builder</span><span class="o">.</span><span class="n">trainable_variables_parameter</span><span class="p">()</span>
+        <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;none&#39;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">profiler</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">run_meta</span><span class="o">=</span><span class="n">run_meta</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+
+        <span class="c1"># it seems that maac in tensorflow is counted as two operations</span>
+        <span class="c1"># I divide the flops by two to get a nearly similar value</span>
+        <span class="n">total_flops</span><span class="p">,</span> <span class="n">total_params</span> <span class="o">=</span> <span class="n">flops</span><span class="o">.</span><span class="n">total_float_ops</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">total_parameters</span>
+        <span class="n">max_params</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span>  <span class="c1"># max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50</span>
+        <span class="n">max_flops</span> <span class="o">=</span> <span class="mi">40</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span>    <span class="c1"># max number of flops # e.g. 3858M of ResNet 50</span>
+
+        <span class="n">params_factor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">max_params</span><span class="p">,</span> <span class="n">total_params</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_params</span><span class="p">))</span>
+        <span class="n">flops_factor</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">max_flops</span><span class="p">,</span> <span class="n">total_flops</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_flops</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">params_factor</span> <span class="o">&lt;=</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">flops_factor</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">worst</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span><span class="n">generator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generator</span><span class="p">,</span> <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
+                                      <span class="n">workers</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                                      <span class="n">callbacks</span><span class="o">=</span><span class="n">callbacks</span><span class="p">)</span>
+
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;sparse_accuracy_ignoring_last_label&#39;</span><span class="p">])</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">])</span>
+        <span class="n">mean_iou</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">mean_ious</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">history</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">worst</span>
+
+        <span class="c1"># equals triangle cross (a x b * c) between params ,flops and acc vector</span>
+        <span class="c1"># score = params_factor * flops_factor * acc</span>
+
+        <span class="n">score</span> <span class="o">=</span> <span class="n">params_factor</span> <span class="o">*</span> <span class="n">flops_factor</span> <span class="o">*</span> <span class="n">mean_iou</span>
+
+        <span class="c1"># score = (params_factor + flops_factor + acc) / 3.0</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mean_iou: </span><span class="si">%.2f</span><span class="s2"> ---&gt; params: </span><span class="si">%d</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2"> ---&gt; flops: </span><span class="si">%s</span><span class="s2">, </span><span class="si">%.2f</span><span class="s2"> ---&gt; score: </span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="n">mean_iou</span><span class="p">,</span> <span class="n">total_params</span><span class="p">,</span> <span class="n">params_factor</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{:,}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">total_flops</span><span class="p">),</span> <span class="n">flops_factor</span><span class="p">,</span> <span class="n">score</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats_path</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats_path</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_lock</span><span class="p">:</span>
+                    <span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="n">epoch</span><span class="p">,</span> <span class="n">acc</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">mean_iou</span><span class="p">,</span> <span class="n">total_params</span><span class="p">,</span> <span class="n">total_flops</span><span class="p">,</span> <span class="n">score</span><span class="p">]</span>
+                    <span class="n">w</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">quoting</span><span class="o">=</span><span class="n">csv</span><span class="o">.</span><span class="n">QUOTE_MINIMAL</span><span class="p">)</span>
+                    <span class="n">w</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+
+        <span class="k">return</span> <span class="n">score</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Tobias Scheck.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

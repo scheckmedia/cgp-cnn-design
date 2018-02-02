@@ -1,0 +1,318 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>evaluator package &mdash; cgp_ann_design 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="cgp_ann_design 1.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> cgp_ann_design
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">evaluator package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-evaluator.keras_evaluator">evaluator.keras_evaluator module</a></li>
+<li><a class="reference internal" href="#module-evaluator">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cgp_ann_design</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>evaluator package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/evaluator.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="evaluator-package">
+<h1>evaluator package<a class="headerlink" href="#evaluator-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-evaluator.keras_evaluator">
+<span id="evaluator-keras-evaluator-module"></span><h2>evaluator.keras_evaluator module<a class="headerlink" href="#module-evaluator.keras_evaluator" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="evaluator.keras_evaluator.Evaluator">
+<em class="property">class </em><code class="descclassname">evaluator.keras_evaluator.</code><code class="descname">Evaluator</code><span class="sig-paren">(</span><em>function_mapping</em>, <em>trainer</em>, <em>add_batch_norm=True</em>, <em>input_shape=(64</em>, <em>64</em>, <em>3)</em>, <em>can_growth=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluator/keras_evaluator.html#Evaluator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#evaluator.keras_evaluator.Evaluator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Class responsible for converting an Individual into a Keras Model and the evaluation</p>
+<dl class="method">
+<dt id="evaluator.keras_evaluator.Evaluator.get_function_input_list">
+<code class="descname">get_function_input_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluator/keras_evaluator.html#Evaluator.get_function_input_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#evaluator.keras_evaluator.Evaluator.get_function_input_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate a list containing the fpipunction names and a list containing the number of
+inputs for each function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="evaluator.keras_evaluator.Evaluator.improved">
+<code class="descname">improved</code><span class="sig-paren">(</span><em>child_number</em>, <em>score</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluator/keras_evaluator.html#Evaluator.improved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#evaluator.keras_evaluator.Evaluator.improved" title="Permalink to this definition">¶</a></dt>
+<dd><p>function is called if the cgp evolution strategy finds a better individual</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>child_number</strong> (<em>int</em>) – child index</li>
+<li><strong>score</strong> (<em>float</em>) – score of the better individual</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="evaluator.keras_evaluator.Evaluator.individual_to_keras_model">
+<code class="descname">individual_to_keras_model</code><span class="sig-paren">(</span><em>individual</em>, <em>child_number=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluator/keras_evaluator.html#Evaluator.individual_to_keras_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#evaluator.keras_evaluator.Evaluator.individual_to_keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a keras model based on an individual</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>individual</strong> (<a class="reference internal" href="cgp.html#cgp.cgp.Individual" title="cgp.cgp.Individual"><em>Individual</em></a>) – instance of an individual where an keras model should be created</li>
+<li><strong>child_number</strong> (<em>int</em>) – a valid index or id</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">an individual if a model could be translated otherwise None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="evaluator.keras_evaluator.Evaluator.name_to_layer">
+<code class="descname">name_to_layer</code><span class="sig-paren">(</span><em>name</em>, <em>idx</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/evaluator/keras_evaluator.html#Evaluator.name_to_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#evaluator.keras_evaluator.Evaluator.name_to_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates an instance of a keras layer based on the constant function mapping</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) – layer name, must be the key in function_mapping</li>
+<li><strong>idx</strong> – some index or id what ever to make a layer name unique</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a valid keras layer</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">keras.layer</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-evaluator">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-evaluator" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Tobias Scheck.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

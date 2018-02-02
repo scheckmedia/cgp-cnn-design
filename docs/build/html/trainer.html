@@ -1,0 +1,551 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>trainer package &mdash; cgp_ann_design 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="cgp_ann_design 1.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> cgp_ann_design
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">trainer package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-trainer.cifar_trainer">trainer.cifar_trainer module</a></li>
+<li><a class="reference internal" href="#module-trainer.cityscapes_trainer">trainer.cityscapes_trainer module</a></li>
+<li><a class="reference internal" href="#module-trainer.imagenet_trainer">trainer.imagenet_trainer module</a></li>
+<li><a class="reference internal" href="#module-trainer.trainer">trainer.trainer module</a></li>
+<li><a class="reference internal" href="#module-trainer.utils">trainer.utils module</a></li>
+<li><a class="reference internal" href="#module-trainer.voc2012_trainer">trainer.voc2012_trainer module</a></li>
+<li><a class="reference internal" href="#module-trainer">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cgp_ann_design</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>trainer package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/trainer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="trainer-package">
+<h1>trainer package<a class="headerlink" href="#trainer-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-trainer.cifar_trainer">
+<span id="trainer-cifar-trainer-module"></span><h2>trainer.cifar_trainer module<a class="headerlink" href="#module-trainer.cifar_trainer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="trainer.cifar_trainer.Cifar10Trainer">
+<em class="property">class </em><code class="descclassname">trainer.cifar_trainer.</code><code class="descname">Cifar10Trainer</code><span class="sig-paren">(</span><em>batch_size=32</em>, <em>epochs=100</em>, <em>verbose=0</em>, <em>lr=None</em>, <em>model_path='tmp/'</em>, <em>stats_path='tmp/'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cifar_trainer.html#Cifar10Trainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cifar_trainer.Cifar10Trainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#trainer.trainer.ClassifyTrainer" title="trainer.trainer.ClassifyTrainer"><code class="xref py py-class docutils literal"><span class="pre">trainer.trainer.ClassifyTrainer</span></code></a></p>
+<p>A trainer class for the Cifar 10 dataset</p>
+<dl class="method">
+<dt id="trainer.cifar_trainer.Cifar10Trainer.append_output_layer">
+<code class="descname">append_output_layer</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cifar_trainer.html#Cifar10Trainer.append_output_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cifar_trainer.Cifar10Trainer.append_output_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends the last layer (dense, softmax) to an output layer
+:param output: layer where additional layer should be connected
+:type output: keras.layers.layer</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">keras.layers.layer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.cifar_trainer.Cifar10Trainer.comp">
+<code class="descname">comp</code><span class="sig-paren">(</span><em>parent</em>, <em>child</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cifar_trainer.html#Cifar10Trainer.comp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cifar_trainer.Cifar10Trainer.comp" title="Permalink to this definition">¶</a></dt>
+<dd><p>compares a parent and a child and decides whether a child is beter than a parent
+:param parent: parent score
+:type parent: float
+:param child: child score
+:type child: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">True if a child is better than a parent otherwise False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.cifar_trainer.Cifar10Trainer.model_improved">
+<code class="descname">model_improved</code><span class="sig-paren">(</span><em>model</em>, <em>score</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cifar_trainer.html#Cifar10Trainer.model_improved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cifar_trainer.Cifar10Trainer.model_improved" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>keras.models.Model</em>) – model which has the best score for a CGP iteration</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-trainer.cityscapes_trainer">
+<span id="trainer-cityscapes-trainer-module"></span><h2>trainer.cityscapes_trainer module<a class="headerlink" href="#module-trainer.cityscapes_trainer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="trainer.cityscapes_trainer.CityscapesTrainer">
+<em class="property">class </em><code class="descclassname">trainer.cityscapes_trainer.</code><code class="descname">CityscapesTrainer</code><span class="sig-paren">(</span><em>input_shape=(128</em>, <em>256</em>, <em>3)</em>, <em>target_size=(128</em>, <em>256)</em>, <em>cs_root=''</em>, <em>image_folder='leftImg8bit'</em>, <em>gt_folder='gtCoarse'</em>, <em>batch_size=8</em>, <em>epochs=30</em>, <em>verbose=0</em>, <em>lr=None</em>, <em>model_path='tmp/cityscapes'</em>, <em>stats_path='tmp/cityscapes'</em>, <em>classes=19</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cityscapes_trainer.html#CityscapesTrainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cityscapes_trainer.CityscapesTrainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#trainer.trainer.ClassifyTrainer" title="trainer.trainer.ClassifyTrainer"><code class="xref py py-class docutils literal"><span class="pre">trainer.trainer.ClassifyTrainer</span></code></a></p>
+<p>A trainer class for Cityscapes dataset</p>
+<dl class="method">
+<dt id="trainer.cityscapes_trainer.CityscapesTrainer.append_output_layer">
+<code class="descname">append_output_layer</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cityscapes_trainer.html#CityscapesTrainer.append_output_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cityscapes_trainer.CityscapesTrainer.append_output_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends the last layer (dense, softmax) to an output layer
+:param output: layer where additional layer should be connected
+:type output: keras.layers.layer</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">keras.layers.layer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.cityscapes_trainer.CityscapesTrainer.comp">
+<code class="descname">comp</code><span class="sig-paren">(</span><em>parent</em>, <em>child</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cityscapes_trainer.html#CityscapesTrainer.comp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cityscapes_trainer.CityscapesTrainer.comp" title="Permalink to this definition">¶</a></dt>
+<dd><p>compares a parent and a child and decides whether a child is better than a parent
+:param parent: parent score
+:type parent: float
+:param child: child score
+:type child: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">True if a child is better than a parent otherwise False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.cityscapes_trainer.CityscapesTrainer.model_improved">
+<code class="descname">model_improved</code><span class="sig-paren">(</span><em>model</em>, <em>score</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/cityscapes_trainer.html#CityscapesTrainer.model_improved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.cityscapes_trainer.CityscapesTrainer.model_improved" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>keras.models.Model</em>) – model which has the best score for a CGP iteration</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-trainer.imagenet_trainer">
+<span id="trainer-imagenet-trainer-module"></span><h2>trainer.imagenet_trainer module<a class="headerlink" href="#module-trainer.imagenet_trainer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="trainer.imagenet_trainer.ImageNetTrainer">
+<em class="property">class </em><code class="descclassname">trainer.imagenet_trainer.</code><code class="descname">ImageNetTrainer</code><span class="sig-paren">(</span><em>ds_root=''</em>, <em>num_classes=1000</em>, <em>batch_size=32</em>, <em>epochs=100</em>, <em>verbose=0</em>, <em>input_shape=(224</em>, <em>224</em>, <em>3)</em>, <em>lr=None</em>, <em>model_path='tmp/'</em>, <em>stats_path='tmp/'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/imagenet_trainer.html#ImageNetTrainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.imagenet_trainer.ImageNetTrainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#trainer.trainer.ClassifyTrainer" title="trainer.trainer.ClassifyTrainer"><code class="xref py py-class docutils literal"><span class="pre">trainer.trainer.ClassifyTrainer</span></code></a></p>
+<p>A trainer class for datasets in imagenet format</p>
+<dl class="method">
+<dt id="trainer.imagenet_trainer.ImageNetTrainer.append_output_layer">
+<code class="descname">append_output_layer</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/imagenet_trainer.html#ImageNetTrainer.append_output_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.imagenet_trainer.ImageNetTrainer.append_output_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends the last layer (dense, softmax) to an output layer
+:param output: layer where additional layer should be connected
+:type output: keras.layers.layer</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">keras.layers.layer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.imagenet_trainer.ImageNetTrainer.comp">
+<code class="descname">comp</code><span class="sig-paren">(</span><em>parent</em>, <em>child</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/imagenet_trainer.html#ImageNetTrainer.comp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.imagenet_trainer.ImageNetTrainer.comp" title="Permalink to this definition">¶</a></dt>
+<dd><p>compares a parent and a child and decides whether a child is beter than a parent
+:param parent: parent score
+:type parent: float
+:param child: child score
+:type child: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">True if a child is better than a parent otherwise False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.imagenet_trainer.ImageNetTrainer.model_improved">
+<code class="descname">model_improved</code><span class="sig-paren">(</span><em>model</em>, <em>score</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/imagenet_trainer.html#ImageNetTrainer.model_improved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.imagenet_trainer.ImageNetTrainer.model_improved" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>keras.models.Model</em>) – model which has the best score for a CGP iteration</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.imagenet_trainer.ImageNetTrainer.preprocess">
+<code class="descname">preprocess</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/imagenet_trainer.html#ImageNetTrainer.preprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.imagenet_trainer.ImageNetTrainer.preprocess" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-trainer.trainer">
+<span id="trainer-trainer-module"></span><h2>trainer.trainer module<a class="headerlink" href="#module-trainer.trainer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="trainer.trainer.ClassifyTrainer">
+<em class="property">class </em><code class="descclassname">trainer.trainer.</code><code class="descname">ClassifyTrainer</code><span class="sig-paren">(</span><em>batch_size=32</em>, <em>num_classes=100</em>, <em>input_shape=(32</em>, <em>32</em>, <em>3)</em>, <em>epochs=100</em>, <em>verbose=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/trainer.html#ClassifyTrainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.trainer.ClassifyTrainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A trainer class will be called inside a evaluation process and contains the whole logic
+to train a model</p>
+<dl class="method">
+<dt id="trainer.trainer.ClassifyTrainer.append_output_layer">
+<code class="descname">append_output_layer</code><span class="sig-paren">(</span><em>output</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/trainer.html#ClassifyTrainer.append_output_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.trainer.ClassifyTrainer.append_output_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends the last layer (dense, softmax) to an output layer
+:param output: layer where additional layer should be connected
+:type output: keras.layers.layer</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">keras.layers.layer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.trainer.ClassifyTrainer.comp">
+<code class="descname">comp</code><span class="sig-paren">(</span><em>parent</em>, <em>child</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/trainer.html#ClassifyTrainer.comp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.trainer.ClassifyTrainer.comp" title="Permalink to this definition">¶</a></dt>
+<dd><p>compares a parent and a child and decides whether a child is beter than a parent
+:param parent: parent score
+:type parent: float
+:param child: child score
+:type child: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">True if a child is better than a parent otherwise False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.trainer.ClassifyTrainer.model_improved">
+<code class="descname">model_improved</code><span class="sig-paren">(</span><em>model</em>, <em>score</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/trainer.html#ClassifyTrainer.model_improved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.trainer.ClassifyTrainer.model_improved" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-trainer.utils">
+<span id="trainer-utils-module"></span><h2>trainer.utils module<a class="headerlink" href="#module-trainer.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="trainer.utils.fcn_to_fc">
+<code class="descclassname">trainer.utils.</code><code class="descname">fcn_to_fc</code><span class="sig-paren">(</span><em>model</em>, <em>dense=False</em>, <em>pooling='max'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/utils.html#fcn_to_fc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.utils.fcn_to_fc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-trainer.voc2012_trainer">
+<span id="trainer-voc2012-trainer-module"></span><h2>trainer.voc2012_trainer module<a class="headerlink" href="#module-trainer.voc2012_trainer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="trainer.voc2012_trainer.Voc2012Trainer">
+<em class="property">class </em><code class="descclassname">trainer.voc2012_trainer.</code><code class="descname">Voc2012Trainer</code><span class="sig-paren">(</span><em>input_shape=(128</em>, <em>128</em>, <em>3)</em>, <em>target_size=(128</em>, <em>128)</em>, <em>voc_root=''</em>, <em>batch_size=32</em>, <em>epochs=50</em>, <em>verbose=0</em>, <em>lr=None</em>, <em>model_path='tmp/'</em>, <em>stats_path='tmp/'</em>, <em>classes=21</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/voc2012_trainer.html#Voc2012Trainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.voc2012_trainer.Voc2012Trainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#trainer.trainer.ClassifyTrainer" title="trainer.trainer.ClassifyTrainer"><code class="xref py py-class docutils literal"><span class="pre">trainer.trainer.ClassifyTrainer</span></code></a></p>
+<p>A trainer class for VOC2012 dataset</p>
+<dl class="method">
+<dt id="trainer.voc2012_trainer.Voc2012Trainer.append_output_layer">
+<code class="descname">append_output_layer</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/voc2012_trainer.html#Voc2012Trainer.append_output_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.voc2012_trainer.Voc2012Trainer.append_output_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>appends the last layer (dense, softmax) to an output layer
+:param output: layer where additional layer should be connected
+:type output: keras.layers.layer</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">keras.layers.layer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.voc2012_trainer.Voc2012Trainer.comp">
+<code class="descname">comp</code><span class="sig-paren">(</span><em>parent</em>, <em>child</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/voc2012_trainer.html#Voc2012Trainer.comp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.voc2012_trainer.Voc2012Trainer.comp" title="Permalink to this definition">¶</a></dt>
+<dd><p>compares a parent and a child and decides whether a child is beter than a parent
+:param parent: parent score
+:type parent: float
+:param child: child score
+:type child: float</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">True if a child is better than a parent otherwise False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trainer.voc2012_trainer.Voc2012Trainer.model_improved">
+<code class="descname">model_improved</code><span class="sig-paren">(</span><em>model</em>, <em>score</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/trainer/voc2012_trainer.html#Voc2012Trainer.model_improved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#trainer.voc2012_trainer.Voc2012Trainer.model_improved" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>keras.models.Model</em>) – model which has the best score for a CGP iteration</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-trainer">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-trainer" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Tobias Scheck.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
