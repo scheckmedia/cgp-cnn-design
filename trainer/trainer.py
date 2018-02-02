@@ -2,11 +2,13 @@ import operator
 
 
 class ClassifyTrainer:
+    """
+    A trainer class will be called inside a evaluation process and contains the whole logic
+    to train a model
+    """
+
     def __init__(self, batch_size=32, num_classes=100, input_shape=(32,32,3), epochs=100, verbose=1):
         """
-        A trainer class will be called inside a evaluation process and contains the whole logic
-        to train a model
-
         Parameters
         ----------
         batch_size: int(32)

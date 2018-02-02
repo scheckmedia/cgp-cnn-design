@@ -22,12 +22,14 @@ from threading import Lock
 
 
 class Voc2012Trainer(ClassifyTrainer):
+    """
+    A trainer class for VOC2012 dataset
+    """
+
     def __init__(self, input_shape=(128, 128, 3), target_size=(128, 128),
                  voc_root='', batch_size=32, epochs=50, verbose=0,
                  lr=None, model_path='tmp/', stats_path='tmp/', classes=21):
         """
-        A trainer class for VOC2012 dataset
-
         Parameters
         ----------
         batch_size: int(32)

@@ -15,10 +15,12 @@ import csv
 
 
 class Cifar10Trainer(ClassifyTrainer):
+    """
+    A trainer class for the Cifar 10 dataset
+    """
+
     def __init__(self, batch_size=32, epochs=100, verbose=0, lr=None, model_path='tmp/', stats_path='tmp/'):
         """
-        A trainer class for the Cifar 10 dataset
-
         Parameters
         ----------
         batch_size: int(32)

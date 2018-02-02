@@ -17,10 +17,13 @@ from keras.preprocessing.image import ImageDataGenerator
 
 
 class ImageNetTrainer(ClassifyTrainer):
+    """
+    A trainer class for datasets in imagenet format
+    """
+
     def __init__(self, ds_root='', num_classes=1000, batch_size=32, epochs=100, verbose=0,
-                 input_shape=(224,224,3), lr=None, model_path='tmp/', stats_path='tmp/'):
+                 input_shape=(224, 224, 3), lr=None, model_path='tmp/', stats_path='tmp/'):
         """
-        A trainer class for datasets in imagenet format
 
         Parameters
         ----------

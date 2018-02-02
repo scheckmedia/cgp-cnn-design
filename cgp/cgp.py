@@ -10,16 +10,60 @@ import warnings
 # but for deeper details I can recommend  http://www.cartesiangp.co.uk/
 # especially the free chapter 1 and 2 from the CGP book
 
+class Gen:
+    """
+    Base Class for Gen
+    """
 
-class OutputGen:
     def __init__(self, max_inputs):
+        """
+        Parameters
+        ----------
+        max_inputs: int
+            max number of function parameters in the cgp grid
+
+        """
         self.is_output = True
         self.inputs = np.zeros(max_inputs, dtype=int)
         self.num_inputs = 1
 
 
-class FunctionGen:
+class OutputGen(Gen):
+    """
+    Representation of node which is an output gen
+    """
+
+    def __init__(self, max_inputs):
+        """
+        Parameters
+        ----------
+        max_inputs: int
+            max number of function parameters in the cgp grid
+
+        """
+        super(OutputGen, self).__init__(max_inputs)
+
+
+class FunctionGen(Gen):
+    """
+    Representation of a node containing a function gen
+    """
+
     def __init__(self, fnc_idx, max_inputs, num_inputs):
+        """
+        Parameters
+        ----------
+        fnc_idx: int
+            position in function set
+
+        max_inputs: int
+            max number of function parameters in the cgp grid
+
+        num_inputs: int
+            number of function parameters for the function at fnc_idx
+        """
+        super(FunctionGen, self).__init__(max_inputs)
+
         self.fnc_idx = fnc_idx
         self.inputs = np.zeros(max_inputs, dtype=int)
         self.num_inputs = num_inputs
@@ -30,10 +74,13 @@ class FunctionGen:
 
 
 class CgpConfig:
+    """
+    configuration for a CGP problem
+    """
+
     def __init__(self, rows=5, cols=10, level_back=5, functions=[], function_inputs=[],
                  constraints=None, mutation_rate=0.1):
         """
-        configuration for a CGP problem
         Parameters
         ----------
         rows: int(5)
@@ -74,10 +121,13 @@ class CgpConfig:
 
 
 class Individual:
+    """
+    individual class containing genes which can be mutated
+    basically in a evolution strategy it is called a parent and/or child
+    """
+
     def __init__(self, config):
         """
-        individual class containing genes which can be mutated
-        basically in a evolution strategy it is called a parent and/or child
         Parameters
         ----------
         config
@@ -297,10 +347,12 @@ class Individual:
 
 
 class CGP:
+    """
+    apply Cartesian Genetic Programming to your problem
+    """
+
     def __init__(self, config, children=2, parent=None):
         """
-        apply Cartesian Genetic Programming to your problem
-
         Parameters
         ----------
         config: CgpConfig
@@ -321,6 +373,7 @@ class CGP:
     def __evaluator_wrapper(self, evaluator, child, index, epoch):
         score = evaluator(child, index, epoch)
         child.score = score
+
 
     def load_parent(self, filename):
         """
@@ -363,10 +416,6 @@ class CGP:
             max number of iterations to search for the best individual
         force_mutate: bool(true)
             forces to mutate. if true and nothing changed it tries to mutate until something changed
-        op: operation.lt
-            compare operation to determine which score is better for a parent and an individual
-            e. g. operator.gt means parent.score > child.score so the score of a child must be smaller to be
-            the best of an epoch
         save_best: str(None)
             if save_best is an path, the best child will be saved to it
         verbose: int(1)

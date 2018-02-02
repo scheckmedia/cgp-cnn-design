@@ -20,12 +20,15 @@ from warnings import warn
 from threading import Lock
 
 class CityscapesTrainer(ClassifyTrainer):
-    def __init__(self, input_shape=(128, 256, 3), target_size=(128, 256),
+    """
+    A trainer class for Cityscapes dataset
+    """
+
+    def __init__(self, input_shape=(256, 512, 3), target_size=(256, 512),
                  cs_root='', image_folder='leftImg8bit', gt_folder='gtCoarse',
-                 batch_size=8, epochs=30, verbose=0,
+                 batch_size=2, epochs=60, verbose=0,
                  lr=None, model_path='tmp/cityscapes', stats_path='tmp/cityscapes', classes=19):
         """
-        A trainer class for Cityscapes dataset
 
         Parameters
         ----------
@@ -41,7 +44,7 @@ class CityscapesTrainer(ClassifyTrainer):
         ClassifyTrainer.__init__(self, batch_size=batch_size, num_classes=classes, input_shape=input_shape,
                                  epochs=epochs, verbose=verbose)
 
-        self.file_path = os.path.join(cs_root, image_folder, 'train_extra.txt')
+        self.file_path = os.path.join(cs_root, image_folder, 'train.txt')
         self.val_file_path = os.path.join(cs_root, image_folder, 'val.txt')
         self.data_dir = os.path.join(cs_root, image_folder)
         self.label_dir = os.path.join(cs_root, gt_folder)
@@ -170,7 +173,7 @@ class CityscapesTrainer(ClassifyTrainer):
         """
 
         run_meta = tf.RunMetadata()
-        optimizer = SGD(momentum=0.9)
+        optimizer = Adam()
         loss = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
 
@@ -182,13 +185,15 @@ class CityscapesTrainer(ClassifyTrainer):
             lr_scheduler = LearningRateScheduler(lambda e: self.learning_rates[e // lr_idx])
             callbacks.append(lr_scheduler)
 
-        callbacks.append(EarlyStopping(monitor='sparse_accuracy_ignoring_last_label', mode='max', min_delta=0.0005, patience=5, verbose=1))
+        callbacks.append(EarlyStopping(monitor='sparse_accuracy_ignoring_last_label', mode='max',
+                                       min_delta=0.0005, patience=5, verbose=1))
 
         steps = self.generator.nb_sample // self.batch_size
         val_steps = self.val_generator.nb_sample // self.batch_size
 
         mean = MeanIoUCallback(model, self.val_generator, val_steps, self.num_classes,
                                every_n_epoch=every_n_epoch,
+                               early_stop={10: 0.32},
                                on_end=True, save_path=self.stats_path)
         callbacks.append(mean)
 
@@ -208,7 +213,7 @@ class CityscapesTrainer(ClassifyTrainer):
         # I divide the flops by two to get a nearly similar value
         total_flops, total_params = flops.total_float_ops // 2, params.total_parameters
         max_params = 4 * 10**6  # max number of params  # e.g. 3.3M of the MobileNet or 25.56M of ResNet 50
-        max_flops = 400 * 10**6    # max number of flops # e.g. 3858M of ResNet 50
+        max_flops = 1.2 * 10**9    # max number of flops # e.g. 3858M of ResNet 50
 
         params_factor = (1 - (min(max_params, total_params) / max_params))
         flops_factor = (1 - (min(max_flops, total_flops) / max_flops))
