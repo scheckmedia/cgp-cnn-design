@@ -19,7 +19,6 @@ def plot_graph(individual, filename=None, rankdir='TB'):
         out_idx = 0
         for idx in active_nodes:
             n = individual.genes[idx]
-
             if isinstance(n, FunctionGen):
                 fnc = individual.config.functions[n.fnc_idx]
 
@@ -30,17 +29,20 @@ def plot_graph(individual, filename=None, rankdir='TB'):
                 else:
                     name = fnc.__name__
 
+                label = name
                 name += '_id_%d' % idx
             else:
                 name = 'output-%d' % out_idx
+                label = name
                 out_idx += 1
 
-            nodes[idx + individual.config.num_input] = pydot.Node(name)
+            nodes[idx + individual.config.num_input] = pydot.Node(name, label=label)
 
         for idx in active_nodes:
             node = nodes[idx + individual.config.num_input]
             for con in range(individual.genes[idx].num_inputs):
                 con_node = nodes[individual.genes[idx].inputs[con]]
+                graph.add_node(con_node)
                 graph.add_edge(pydot.Edge(con_node, node))
 
         if filename is not None:
@@ -77,7 +79,7 @@ def plot_cartesian(individual, filename='grid.png'):
         graph.add_node(node)
 
     for idx in range(individual.config.num_output):
-        node = pydot.Node('output %d' % (idx + 1), style="filled", fillcolor='#ccaadd')
+        node = pydot.Node('output %d' % idx, style="filled", fillcolor='#ccaadd')
         node.set('pos', '%2f,%2f!' % ((individual.config.cols + 1) / 1.5, idx))
         nodes.append(node)
         graph.add_node(node)
