@@ -1,0 +1,72 @@
+# yaml syntax https://pyyaml.org/wiki/PyYAMLDocumentation
+exp_name:  &exp_name "train_cgp_0.568"
+exp_output_path: &output_path !makedirs [tmp/cityscapes/, *exp_name]
+# model: tmp/cityscapes/model_child-2_score_0.194.hdf5
+
+custom_objects: &custom_objects
+  - BilinearUpSampling2D: !!python/name:fcn_utils.BilinearUpSampling.BilinearUpSampling2D
+  - PadZeros: !!python/name:layers.pad.PadZeros
+  - ChannelShuffle: !!python/name:layers.shuffle.ChannelShuffle
+  - DepthwiseConv2D: !!python/name:keras.applications.mobilenet.DepthwiseConv2D
+
+fcn: !!python/object/apply:trainer.utils.fcn_wrapper &fcn
+  kwds:
+    model: tmp/cityscapes/dw_mr_0.5_512x256/model_child-1_score_0.568.hdf5
+#    model: !!python/object/apply:keras.applications.mobilenet.MobileNet
+#      kwds:
+#        input_shape: !!python/tuple
+#          - 224
+#          - 224
+#          - 3
+#        include_top: False
+#        weights: !!python/none
+    skip_connections:
+    custom_objects: *custom_objects
+
+run:
+  trainer: !!python/object/apply:trainer.cityscapes_trainer.CityscapesTrainer
+    kwds:
+      input_shape: !!python/tuple
+        - 1024
+        - 2048
+        - 3
+      target_size: !!python/tuple
+        - 1024
+        - 2048
+      cs_root: /mnt/daten/Development/Cityscapes
+      image_folder: leftImg8bit
+      gt_folder: gtCoarse
+      batch_size: 2
+      epochs: 100
+      verbose: 1
+      lr:
+        - 0.001
+      model_path: *output_path
+      stats_path: *output_path
+      classes: 19
+  # kwargs check trainer/* __call__ method
+  kwds:
+    model: *fcn
+    epoch: 0 # just a dummy not used in training mode
+    skip_checks: True
+    callbacks:
+      - !!python/object/apply:keras.callbacks.CSVLogger
+        kwds:
+          filename: !join [*output_path, training.csv]
+          separator: ','
+          append: false
+      - !!python/object/apply:keras.callbacks.ReduceLROnPlateau
+        kwds:
+          monitor: sparse_accuracy_ignoring_last_label
+          patience: 10
+          verbose: 1
+          mode: max
+      - !!python/object/apply:keras.callbacks.ModelCheckpoint
+        kwds:
+          filepath: !join [*output_path, trained_model.hdf5]
+          monitor: sparse_accuracy_ignoring_last_label
+          verbose: 0
+          save_best_only: false
+          save_weights_only: false
+          mode: max
+          period: 1
