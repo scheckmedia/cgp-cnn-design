@@ -29,8 +29,8 @@ def fcn_to_fc(model, dense=False, pooling='max'):
 
 
 def fcn_wrapper(model, is_fcn=False, input_shape=(1024, 2048, 3), target_size=(1024, 2048),
-                skip_connections=None, load_weights=None, num_classes=19):
-    custom_objects = {
+                skip_connections=None, load_weights=None, num_classes=19, custom_objects=None):
+    default_custom_objects = {
         'BilinearUpSampling2D': BilinearUpSampling2D,
         'PadZeros': PadZeros,
         'DepthwiseConv2D': DepthwiseConv2D,
@@ -39,11 +39,20 @@ def fcn_wrapper(model, is_fcn=False, input_shape=(1024, 2048, 3), target_size=(1
         'ChannelShuffle': ChannelShuffle,
         'ShuffleBlock': ShuffleBlock}
 
+    if not isinstance(custom_objects, dict):
+        custom_objects = {}
+
+    custom_objects = {**custom_objects, **default_custom_objects}
+
     if isinstance(model, str):
         model = load_model(model, custom_objects=custom_objects)
 
     if not isinstance(model, Model):
         raise TypeError('model is invalid')
+
+
+
+
 
     # workaround to change input and ouput size of an model
     m = json.loads(model.to_json())
@@ -82,7 +91,11 @@ def fcn_wrapper(model, is_fcn=False, input_shape=(1024, 2048, 3), target_size=(1
 
     if skip_connections:
         for idx, s in enumerate(skip_connections):
-            current_layer = model.get_layer(s).output
+            try:
+                current_layer = model.get_layer(s).output
+            except ValueError:
+                raise ValueError('invalid skip connection. layer "%s" does not exist in model' % s)
+
             previous_layer = pool[-1]
             scale_factor = tuple(
                 map(lambda x, y: int(y / x),
