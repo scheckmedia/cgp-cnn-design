@@ -26,15 +26,17 @@ def sparse_accuracy_ignoring_last_label(y_true, y_pred):
                   K.floatx())
 
 def iou(y_true, y_pred):
-    # horrible slow
-
     num_classes = K.int_shape(y_pred)[-1]
-    print("shapes:", K.int_shape(y_true), K.int_shape(y_pred))
+    y_pred = K.flatten(K.argmax(y_pred, axis=-1))
+    y_true = K.reshape(y_true, (-1, ))
 
-    y_pred = K.reshape(y_pred, (-1, K.int_shape(y_pred)[-1]))
-    y_true = K.one_hot(tf.to_int32(K.flatten(y_true)), K.int_shape(y_pred)[-1] + 1)
-    unpacked = tf.unstack(y_true, axis=-1)
-    y_true = tf.stack(unpacked[:-1], axis=-1)
+    # weights = K.cast(K.less(y_true, 255), tf.int32)
+    #
+    # print(K.int_shape(y_pred), K.int_shape(y_true), K.int_shape(weights))
+
+    indices = tf.where(K.less_equal(y_true, num_classes - 1))
+    y_true = tf.cast(tf.gather(y_true, indices), tf.int32)
+    y_pred = tf.cast(tf.gather(y_pred, indices), tf.int32)
 
     score, up_opt = tf.metrics.mean_iou(y_true, y_pred, num_classes)
     K.get_session().run(tf.local_variables_initializer())
